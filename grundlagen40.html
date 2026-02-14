@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russische Grammatik: Das Verb ДЕЛАТЬ</title>
+    <!-- Polyfill für Touch-Geräte -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --secondary-color: #f50057;
+            --success-color: #4caf50;
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .intro-box {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .exercise-card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .exercise-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-check { background-color: var(--primary-color); color: white; }
+        .btn-check:hover { background-color: #303f9f; }
+
+        .btn-reset { background-color: #ff9800; color: white; }
+        .btn-reset:hover { background-color: #f57c00; }
+
+        .btn-solve { background-color: #9e9e9e; color: white; }
+        .btn-solve:hover { background-color: #757575; }
+
+        /* Inputs & Interaction elements */
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-size: 1rem;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+        }
+        .feedback.success { color: var(--success-color); }
+        .feedback.error { color: var(--secondary-color); }
+
+        /* Styling Logic Feedback */
+        .correct-border { border: 2px solid var(--success-color) !important; background-color: #e8f5e9 !important; }
+        .wrong-border { border: 2px solid var(--secondary-color) !important; background-color: #ffebee !important; }
+
+        /* Drag and Drop Styles */
+        .draggable-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+
+        .draggable {
+            background-color: #fff;
+            border: 1px solid #90caf9;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .draggable:active { cursor: grabbing; }
+
+        .dropzone {
+            display: inline-block;
+            min-width: 120px;
+            min-height: 35px;
+            border-bottom: 2px dashed #999;
+            vertical-align: middle;
+            background-color: #fafafa;
+            margin: 0 5px;
+            text-align: center;
+            padding-top: 5px;
+        }
+
+        /* Match Columns specific */
+        .match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .match-item { width: 45%; padding: 10px; background: #eee; border-radius: 4px; }
+        .match-dropzone { width: 45%; min-height: 40px; border: 2px dashed #bbb; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; }
+
+        /* Multiple Choice */
+        .mc-option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .mc-option:hover { background-color: #f0f0f0; }
+        input[type="radio"] { margin-right: 10px; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Grammatik-Training: Das Verb ДЕЛАТЬ</h1>
+
+    <div class="intro-box">
+        <h2>Einführung</h2>
+        <p>Das russische Verb <strong>ДЕЛАТЬ</strong> (tun/machen) verändert seine Bedeutung und oft auch seinen Aspekt (unvollendet/vollendet), wenn man Präfixe hinzufügt. Diese Präfixe nuancieren die Handlung erheblich.</p>
+        <p><strong>Beispiele:</strong></p>
+        <ul>
+            <li><strong>ПЕРЕделать:</strong> Etwas noch einmal machen (korrigieren) oder umgestalten.</li>
+            <li><strong>ДОделать:</strong> Etwas zu Ende bringen.</li>
+            <li><strong>ЗАделать:</strong> Ein Loch schließen/verputzen.</li>
+            <li><strong>ПОДделать:</strong> Etwas fälschen.</li>
+        </ul>
+        <p>In den folgenden Aufgaben üben wir die richtige Verwendung dieser Verben.</p>
+    </div>
+
+    <!-- Aufgabe 1: Multiple Choice -->
+    <div class="exercise-card" id="ex1">
+        <div class="exercise-header">Aufgabe 1: Bedeutung erkennen</div>
+        <p>Was bedeutet der Satz: „Студент переделал домашнее задание“?</p>
+        <label class="mc-option"><input type="radio" name="ex1" value="wrong"> Der Student hat die Hausaufgabe gar nicht gemacht.</label>
+        <label class="mc-option"><input type="radio" name="ex1" value="correct"> Der Student hat die Hausaufgabe noch einmal gemacht (korrigiert).</label>
+        <label class="mc-option"><input type="radio" name="ex1" value="wrong"> Der Student hat die Hausaufgabe nur kurz gemacht.</label>
+        
+        <div class="feedback" id="fb1"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkMC('ex1', 'fb1')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetMC('ex1', 'fb1')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveMC('ex1', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 2: Drag & Drop Matching -->
+    <div class="exercise-card" id="ex2">
+        <div class="exercise-header">Aufgabe 2: Präfixe zuordnen</div>
+        <p>Ziehen Sie das passende russische Verb zur deutschen Definition.</p>
+        
+        <div class="draggable-container" id="source2">
+            <div class="draggable" draggable="true" id="d2_1" data-val="pod">ПОДДЕЛАТЬ</div>
+            <div class="draggable" draggable="true" id="d2_2" data-val="do">ДОДЕЛАТЬ</div>
+            <div class="draggable" draggable="true" id="d2_3" data-val="za">ЗАДЕЛАТЬ</div>
+            <div class="draggable" draggable="true" id="d2_4" data-val="pri">ПРИДЕЛАТЬ</div>
+        </div>
+
+        <div class="match-row">
+            <div class="match-item">Ein Loch schließen (z.B. in der Wand)</div>
+            <div class="match-dropzone" data-target="za"></div>
+        </div>
+        <div class="match-row">
+            <div class="match-item">Etwas fälschen (z.B. ein Dokument)</div>
+            <div class="match-dropzone" data-target="pod"></div>
+        </div>
+        <div class="match-row">
+            <div class="match-item">Etwas befestigen / anbringen</div>
+            <div class="match-dropzone" data-target="pri"></div>
+        </div>
+        <div class="match-row">
+            <div class="match-item">Etwas zu Ende bringen</div>
+            <div class="match-dropzone" data-target="do"></div>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkDnD('ex2', 'fb2')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDnD('ex2', 'source2', 'fb2')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDnD('ex2', 'source2')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 3: Dropdown Kontext -->
+    <div class="exercise-card" id="ex3">
+        <div class="exercise-header">Aufgabe 3: Kontext (Kochen)</div>
+        <p>Wählen Sie das richtige Verb für den Satz.</p>
+        <p>Bevor man den Fisch kocht, muss man ihn „<select id="sel3">
+            <option value="">---</option>
+            <option value="wrong1">сделать</option>
+            <option value="correct">разделать</option>
+            <option value="wrong2">наделать</option>
+        </select>“ (zerlegen/ausnehmen).</p>
+
+        <div class="feedback" id="fb3"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkSelect('ex3', 'fb3')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('ex3', 'fb3')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('ex3', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 4: Drag & Drop Lückenfüllen -->
+    <div class="exercise-card" id="ex4">
+        <div class="exercise-header">Aufgabe 4: Renovierung</div>
+        <p>Vervollständigen Sie den Text zur Wohnungsrenovierung.</p>
+        
+        <div class="draggable-container" id="source4">
+            <div class="draggable" draggable="true" id="d4_1" data-val="otdelali">отделали</div>
+            <div class="draggable" draggable="true" id="d4_2" data-val="zadelyvat">заделывать</div>
+        </div>
+
+        <p>Wir haben eine Wohnung ohne Renovierung gekauft. Die Arbeiter haben die Wände noch nicht <div class="dropzone" data-target="otdelali"></div>. Wir müssen auch noch Löcher in der Wand <div class="dropzone" data-target="zadelyvat"></div>.</p>
+
+        <div class="feedback" id="fb4"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkDnD('ex4', 'fb4')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDnD('ex4', 'source4', 'fb4')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDnD('ex4', 'source4')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 5: Multiple Choice (Umgangssprache) -->
+    <div class="exercise-card" id="ex5">
+        <div class="exercise-header">Aufgabe 5: Umgangssprache</div>
+        <p>Was bedeutet „Маша, ты уделала новое платье!“ in der Umgangssprache?</p>
+        <label class="mc-option"><input type="radio" name="ex5" value="wrong1"> Mascha hat das Kleid repariert.</label>
+        <label class="mc-option"><input type="radio" name="ex5" value="correct"> Mascha hat das Kleid schmutzig gemacht.</label>
+        <label class="mc-option"><input type="radio" name="ex5" value="wrong2"> Mascha hat das Kleid verkauft.</label>
+
+        <div class="feedback" id="fb5"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkMC('ex5', 'fb5')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetMC('ex5', 'fb5')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveMC('ex5', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 6: Dropdown (Reflexiv) -->
+    <div class="exercise-card" id="ex6">
+        <div class="exercise-header">Aufgabe 6: Reflexive Verben (-ся)</div>
+        <p>Die Gäste waren sehr anstrengend. Ich war froh, als ich mich endlich von ihnen „<select id="sel6">
+            <option value="">---</option>
+            <option value="wrong">отделал</option>
+            <option value="correct">отделался</option>
+        </select>“ (lösen/befreien) konnte.</p>
+
+        <div class="feedback" id="fb6"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkSelect('ex6', 'fb6')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('ex6', 'fb6')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('ex6', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 7: Drag & Drop (Logik) -->
+    <div class="exercise-card" id="ex7">
+        <div class="exercise-header">Aufgabe 7: Was passt nicht?</div>
+        <p>Welches Verb passt in die logische Reihe: „machen“ -> „Loch machen“ -> „durchlöchern“?</p>
+        
+        <div class="draggable-container" id="source7">
+            <div class="draggable" draggable="true" id="d7_1" data-val="pro">ПРОДЕЛАТЬ</div>
+            <div class="draggable" draggable="true" id="d7_2" data-val="na">НАДЕЛАТЬ</div>
+            <div class="draggable" draggable="true" id="d7_3" data-val="vy">ВЫДЕЛАТЬ</div>
+        </div>
+
+        <div style="text-align: center; font-size: 1.2em; margin: 20px;">
+            ДЕЛАТЬ &rarr; <div class="dropzone" data-target="pro" style="margin: 0 10px;"></div> (Loch machen/Weg zurücklegen)
+        </div>
+
+        <div class="feedback" id="fb7"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkDnD('ex7', 'fb7')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDnD('ex7', 'source7', 'fb7')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDnD('ex7', 'source7')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 8: Multiple Choice (Negativ) -->
+    <div class="exercise-card" id="ex8">
+        <div class="exercise-header">Aufgabe 8: Negative Konnotation</div>
+        <p>Jemand sagt: „Что ты наделала?“ (Was hast du gemacht?). Welche Nuance hat das?</p>
+        <label class="mc-option"><input type="radio" name="ex8" value="correct"> Vorwurfsvoll: Du hast etwas Schlechtes angerichtet.</label>
+        <label class="mc-option"><input type="radio" name="ex8" value="wrong"> Lobend: Du hast sehr viel gearbeitet.</label>
+
+        <div class="feedback" id="fb8"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkMC('ex8', 'fb8')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetMC('ex8', 'fb8')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveMC('ex8', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 9: Dropdown (Handwerk) -->
+    <div class="exercise-card" id="ex9">
+        <div class="exercise-header">Aufgabe 9: Handwerk</div>
+        <p>Der Juwelier muss den Diamanten in den Ring „<select id="sel9">
+            <option value="">---</option>
+            <option value="correct">вделать</option>
+            <option value="wrong1">выделать</option>
+            <option value="wrong2">сделать</option>
+        </select>“ (einarbeiten/einsetzen).</p>
+
+        <div class="feedback" id="fb9"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkSelect('ex9', 'fb9')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('ex9', 'fb9')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('ex9', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 10: Drag & Drop (Phrase) -->
+    <div class="exercise-card" id="ex10">
+        <div class="exercise-header">Aufgabe 10: Satzbau</div>
+        <p>Bauen Sie den Satz: „Die Touristen haben einen langen Weg zurückgelegt.“</p>
+        <div class="draggable-container" id="source10">
+            <div class="draggable" draggable="true" id="d10_1" data-val="2">проделали</div>
+            <div class="draggable" draggable="true" id="d10_2" data-val="1">Туристы</div>
+            <div class="draggable" draggable="true" id="d10_3" data-val="3">долгий путь.</div>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="dropzone" data-target="1"></div>
+            <div class="dropzone" data-target="2"></div>
+            <div class="dropzone" data-target="3"></div>
+        </div>
+
+        <div class="feedback" id="fb10"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkDnD('ex10', 'fb10')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDnD('ex10', 'source10', 'fb10')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDnD('ex10', 'source10')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 11: Multiple Choice (Benehmen) -->
+    <div class="exercise-card" id="ex11">
+        <div class="exercise-header">Aufgabe 11: Soziales Verhalten</div>
+        <p>Wenn jemand angibt und sich wichtiger macht, als er ist, sagt man:</p>
+        <label class="mc-option"><input type="radio" name="ex11" value="wrong"> Он подделывается. (Er fälscht sich.)</label>
+        <label class="mc-option"><input type="radio" name="ex11" value="correct"> Он выделывается. (Er spielt sich auf.)</label>
+        <label class="mc-option"><input type="radio" name="ex11" value="wrong"> Он разделывается. (Er zerlegt sich.)</label>
+
+        <div class="feedback" id="fb11"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkMC('ex11', 'fb11')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetMC('ex11', 'fb11')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveMC('ex11', 'correct')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 12: Mix Dropdown -->
+    <div class="exercise-card" id="ex12">
+        <div class="exercise-header">Aufgabe 12: Abschluss-Mix</div>
+        <p>Wählen Sie die korrekte Übersetzung.</p>
+        <p>1. Etwas ein wenig machen: <select id="sel12_1">
+            <option value="">---</option>
+            <option value="correct">поделать</option>
+            <option value="wrong">доделать</option>
+        </select></p>
+        <p>2. Leder bearbeiten (gerben): <select id="sel12_2">
+            <option value="">---</option>
+            <option value="wrong">приделать</option>
+            <option value="correct">выделать</option>
+        </select></p>
+
+        <div class="feedback" id="fb12"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkSelectMulti('ex12', 'fb12')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelectMulti('ex12', 'fb12')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelectMulti('ex12')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Drag and Drop Logic ---
+    const draggables = document.querySelectorAll('.draggable');
+    const dropzones = document.querySelectorAll('.dropzone, .match-dropzone');
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add('dragging');
+        });
+
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging');
+        });
+    });
+
+    dropzones.forEach(dropzone => {
+        dropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggable = document.querySelector('.dragging');
+            if(dropzone.childElementCount === 0 || dropzone.classList.contains('draggable-container')) {
+                 dropzone.classList.add('drag-over');
+            }
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            const draggable = document.querySelector('.dragging');
+            // Allow drop only if empty (for exercise zones) or if it's the source container
+            if (dropzone.childElementCount === 0 && !dropzone.id.startsWith('source')) {
+                dropzone.appendChild(draggable);
+            } else if (dropzone.id.startsWith('source')) {
+                // If dropping back to source list
+                dropzone.appendChild(draggable);
+            }
+        });
+    });
+
+    // Also allow dropping back to source containers explicitly
+    const sources = document.querySelectorAll('.draggable-container');
+    sources.forEach(source => {
+        source.addEventListener('dragover', e => {
+            e.preventDefault();
+        });
+        source.addEventListener('drop', e => {
+            e.preventDefault();
+            const draggable = document.querySelector('.dragging');
+            source.appendChild(draggable);
+        });
+    });
+
+
+    // --- Generic Functions ---
+
+    function setFeedback(id, isCorrect, msg = "") {
+        const el = document.getElementById(id);
+        if (isCorrect) {
+            el.textContent = msg || "Richtig! Gut gemacht.";
+            el.className = "feedback success";
+        } else {
+            el.textContent = msg || "Leider falsch. Versuche es noch einmal.";
+            el.className = "feedback error";
+        }
+    }
+
+    function clearFeedback(id) {
+        const el = document.getElementById(id);
+        el.textContent = "";
+        el.className = "feedback";
+    }
+
+    // --- Multiple Choice (Radio) Handlers ---
+
+    function checkMC(containerId, feedbackId) {
+        const options = document.getElementsByName(containerId);
+        let selected = null;
+        let parentLabel = null;
+        
+        // Clear previous styles
+        document.querySelectorAll(`#${containerId} .mc-option`).forEach(l => {
+            l.classList.remove('correct-border', 'wrong-border');
+        });
+
+        for(const opt of options) {
+            if(opt.checked) {
+                selected = opt.value;
+                parentLabel = opt.parentElement;
+                break;
+            }
+        }
+
+        if (!selected) {
+            setFeedback(feedbackId, false, "Bitte wähle eine Option aus.");
+            return;
+        }
+
+        if (selected === 'correct') {
+            parentLabel.classList.add('correct-border');
+            setFeedback(feedbackId, true);
+        } else {
+            parentLabel.classList.add('wrong-border');
+            setFeedback(feedbackId, false);
+        }
+    }
+
+    function resetMC(containerId, feedbackId) {
+        const options = document.getElementsByName(containerId);
+        for(const opt of options) opt.checked = false;
+        document.querySelectorAll(`#${containerId} .mc-option`).forEach(l => {
+            l.classList.remove('correct-border', 'wrong-border');
+        });
+        clearFeedback(feedbackId);
+    }
+
+    function solveMC(containerId, correctVal) {
+        const options = document.getElementsByName(containerId);
+        // Reset styles first
+        document.querySelectorAll(`#${containerId} .mc-option`).forEach(l => {
+            l.classList.remove('correct-border', 'wrong-border');
+        });
+        
+        for(const opt of options) {
+            if(opt.value === correctVal) {
+                opt.checked = true;
+                opt.parentElement.classList.add('correct-border');
+            }
+        }
+        clearFeedback(document.querySelector(`#${containerId} .feedback`).id);
+    }
+
+    // --- Select (Dropdown) Handlers ---
+
+    function checkSelect(containerId, feedbackId) {
+        const select = document.querySelector(`#${containerId} select`);
+        select.classList.remove('correct-border', 'wrong-border');
+        
+        if (select.value === 'correct') {
+            select.classList.add('correct-border');
+            setFeedback(feedbackId, true);
+        } else {
+            select.classList.add('wrong-border');
+            setFeedback(feedbackId, false);
+        }
+    }
+
+    function resetSelect(containerId, feedbackId) {
+        const select = document.querySelector(`#${containerId} select`);
+        select.value = "";
+        select.classList.remove('correct-border', 'wrong-border');
+        clearFeedback(feedbackId);
+    }
+
+    function solveSelect(containerId, correctVal) {
+        const select = document.querySelector(`#${containerId} select`);
+        select.value = correctVal;
+        select.classList.remove('wrong-border');
+        select.classList.add('correct-border');
+        clearFeedback(document.querySelector(`#${containerId} .feedback`).id);
+    }
+
+    // --- Multi Select Handlers (Ex 12) ---
+    function checkSelectMulti(containerId, feedbackId) {
+        const selects = document.querySelectorAll(`#${containerId} select`);
+        let allCorrect = true;
+        
+        selects.forEach(sel => {
+            sel.classList.remove('correct-border', 'wrong-border');
+            if(sel.value === 'correct') {
+                sel.classList.add('correct-border');
+            } else {
+                sel.classList.add('wrong-border');
+                allCorrect = false;
+            }
+        });
+
+        if(allCorrect) setFeedback(feedbackId, true);
+        else setFeedback(feedbackId, false);
+    }
+
+    function resetSelectMulti(containerId, feedbackId) {
+        const selects = document.querySelectorAll(`#${containerId} select`);
+        selects.forEach(sel => {
+            sel.value = "";
+            sel.classList.remove('correct-border', 'wrong-border');
+        });
+        clearFeedback(feedbackId);
+    }
+
+    function solveSelectMulti(containerId) {
+        const selects = document.querySelectorAll(`#${containerId} select`);
+        selects.forEach(sel => {
+            sel.value = "correct";
+            sel.classList.remove('wrong-border');
+            sel.classList.add('correct-border');
+        });
+        clearFeedback(document.querySelector(`#${containerId} .feedback`).id);
+    }
+
+    // --- Drag and Drop Check/Reset/Solve ---
+
+    function checkDnD(containerId, feedbackId) {
+        const dropzones = document.querySelectorAll(`#${containerId} .dropzone, #${containerId} .match-dropzone`);
+        let allCorrect = true;
+        let allFilled = true;
+
+        dropzones.forEach(zone => {
+            zone.classList.remove('correct-border', 'wrong-border');
+            if (zone.children.length === 0) {
+                allFilled = false;
+                zone.classList.add('wrong-border');
+            } else {
+                const item = zone.children[0];
+                const targetVal = zone.dataset.target;
+                const itemVal = item.dataset.val;
+                
+                if (targetVal === itemVal) {
+                    zone.classList.add('correct-border');
+                } else {
+                    zone.classList.add('wrong-border');
+                    allCorrect = false;
+                }
+            }
+        });
+
+        if (!allFilled) {
+            setFeedback(feedbackId, false, "Bitte fülle alle Lücken aus.");
+        } else if (allCorrect) {
+            setFeedback(feedbackId, true);
+        } else {
+            setFeedback(feedbackId, false);
+        }
+    }
+
+    function resetDnD(containerId, sourceId, feedbackId) {
+        const source = document.getElementById(sourceId);
+        const draggables = document.querySelectorAll(`#${containerId} .draggable`);
+        const dropzones = document.querySelectorAll(`#${containerId} .dropzone, #${containerId} .match-dropzone`);
+        
+        dropzones.forEach(z => z.classList.remove('correct-border', 'wrong-border'));
+
+        // Move all back to source
+        // Sort by ID to keep original order roughly
+        const sortedDraggables = Array.from(draggables).sort((a, b) => a.id.localeCompare(b.id));
+        sortedDraggables.forEach(d => source.appendChild(d));
+        
+        clearFeedback(feedbackId);
+    }
+
+    function solveDnD(containerId, sourceId) {
+        const dropzones = document.querySelectorAll(`#${containerId} .dropzone, #${containerId} .match-dropzone`);
+        const draggables = Array.from(document.querySelectorAll(`#${containerId} .draggable`));
+        
+        dropzones.forEach(zone => {
+            const targetVal = zone.dataset.target;
+            const correctItem = draggables.find(d => d.dataset.val === targetVal);
+            if(correctItem) {
+                zone.appendChild(correctItem);
+                zone.classList.remove('wrong-border');
+                zone.classList.add('correct-border');
+            }
+        });
+        clearFeedback(document.querySelector(`#${containerId} .feedback`).id);
+    }
+
+</script>
+
+</body>
+</html>
