@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Vokabeltrainer: Das Verb ДЕЛАТЬ</title>
+    <style>
+        :root {
+            /* Grünes Farbschema */
+            --primary-color: #2E7D32; /* Dunkelgrün */
+            --primary-light: #4CAF50; /* Mittelgrün */
+            --primary-dark: #1B5E20; /* Sehr dunkles Grün */
+            --accent-color: #81C784; /* Hellgrün Akzent */
+            --background-bg: #E8F5E9; /* Sehr heller Hintergrund */
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+            --text-light: #666666;
+            
+            --card-width: 600px;
+            --card-height: 350px;
+            --border-radius: 16px;
+            --shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Container für die Lernkartei */
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Fortschrittsanzeige */
+        .progress-bar {
+            background-color: #C8E6C9;
+            border-radius: 20px;
+            padding: 5px 15px;
+            color: var(--primary-dark);
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* 3D Karte Scene */
+        .scene {
+            width: 100%;
+            max-width: var(--card-width);
+            height: var(--card-height);
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card__face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-light);
+            text-align: center;
+            user-select: none;
+        }
+
+        .card__face--front {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f8e9 100%);
+        }
+
+        .card__face--back {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            transform: rotateY(180deg);
+        }
+
+        .card-label {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            opacity: 0.7;
+        }
+
+        .card-content {
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-color);
+            /* Font-size wird dynamisch via JS angepasst */
+        }
+
+        /* Hilfsklassen für Textlänge */
+        .text-short { font-size: 2rem; }
+        .text-medium { font-size: 1.5rem; }
+        .text-long { font-size: 1.1rem; }
+
+        .hint {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        /* Steuerungen */
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--accent-color);
+            color: var(--primary-dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #66BB6A;
+        }
+
+        /* Keyboard Instructions */
+        .keyboard-hints {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-align: center;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        kbd {
+            background-color: #eee;
+            border-radius: 3px;
+            border: 1px solid #b4b4b4;
+            box-shadow: 0 1px 1px rgba(0,0,0,.2), 0 2px 0 0 rgba(255,255,255,.7) inset;
+            color: #333;
+            display: inline-block;
+            font-size: .85em;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 650px) {
+            :root {
+                --card-height: 400px; /* Höher für lange Texte auf Handy */
+            }
+            .scene {
+                max-width: 100%;
+            }
+            .text-short { font-size: 1.6rem; }
+            .text-medium { font-size: 1.3rem; }
+            .text-long { font-size: 1rem; }
+            
+            .controls {
+                width: 100%;
+            }
+            button {
+                flex: 1 1 40%; /* Buttons nehmen mehr Platz ein */
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Lernkartei: ДЕЛАТЬ</h1>
+            <div class="subtitle">Russisch Vokabeln und Präfixe</div>
+        </header>
+
+        <div class="progress-bar" id="progressDisplay">Karte 1 / 69</div>
+
+        <!-- Karte -->
+        <div class="scene" id="scene">
+            <div class="card" id="card">
+                <div class="card__face card__face--front">
+                    <div class="card-label">Russisch</div>
+                    <div class="card-content" id="cardFront"></div>
+                    <div class="hint">Klicken zum Umdrehen</div>
+                </div>
+                <div class="card__face card__face--back">
+                    <div class="card-label">Deutsch</div>
+                    <div class="card-content" id="cardBack"></div>
+                    <div class="hint">Klicken zum Umdrehen</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="controls">
+            <button onclick="prevCard()" title="Pfeil Links">← Vorherige</button>
+            <button class="btn-secondary" onclick="resetToStart()" title="Pos1 / Home">↺ Anfang</button>
+            <button class="btn-secondary" onclick="shuffleDeck()">🔀 Mischen</button>
+            <button onclick="nextCard()" title="Pfeil Rechts">Nächste →</button>
+        </div>
+
+        <!-- Tastatur Hinweise -->
+        <div class="keyboard-hints">
+            <p>Steuerung: <kbd>Leertaste</kbd> / <kbd>Enter</kbd> zum Drehen • <kbd>←</kbd> / <kbd>→</kbd> zur Navigation</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATEN ---
+        // Die Rohdaten aus der Anforderung
+        const rawData = `
+1.	де́лать / сде́лать – tun, machen
+2.	де́ло – die Sache, die Angelegenheit, das Werk
+3.	поде́лать (SV) – ein wenig tun, eine Zeit lang machen
+4.	переде́лывать / переде́лать – umändern, neu machen, korrigieren
+5.	исправля́ть / испра́вить – korrigieren, verbessern
+6.	за́ново – von neuem, noch einmal
+7.	оши́бка – der Fehler
+8.	доде́лывать / доде́лать – fertigstellen, zu Ende machen
+9.	до конца́ – bis zum Ende
+10.	заде́лывать / заде́лать – (ein Loch/einen Riss) schließen, verputzen, abdichten
+11.	дыра́ – das Loch (umgangssprachlich)
+12.	отве́рстие – die Öffnung, das Loch (neutral)
+13.	стена́ – die Wand
+14.	ремо́нт – die Renovierung, die Reparatur
+15.	уде́лывать / уде́лать – (ugs.) stark beschmutzen, einsauen; (im Wettkampf) besiegen
+16.	па́чкать / испа́чкать – schmutzig machen
+17.	побежда́ть / победи́ть – siegen, besiegen
+18.	сопе́рник – der Gegner, der Rivale
+19.	гря́зный – schmutzig
+20.	уде́лываться / уде́латься – (ugs.) sich schmutzig machen
+21.	пятно́ – der Fleck
+22.	вде́лывать / вде́лать – einarbeiten, einsetzen, einfassen (fest integrieren)
+23.	вставля́ть / вста́вить – einfügen, hineinsetzen
+24.	ювели́р – der Juwelier
+25.	драгоце́нный ка́мень – der Edelstein
+26.	кольцо́ – der Ring
+27.	проде́лывать / проде́лать – ein Loch durch etwas machen; (einen Weg/Arbeit) zurücklegen/bewältigen
+28.	путь – der Weg
+29.	расстоя́ние – die Entfernung, die Distanz
+30.	экспериме́нт – das Experiment
+31.	отде́лывать / отде́лать – (den Innenausbau) fertigstellen, renovieren; (ugs.) jemanden verprügeln
+32.	отде́лка – der Innenausbau, die Endbearbeitung, die Verzierung
+33.	обо́и – die Tapete
+34.	избива́ть / изби́ть – verprügeln, zusammenschlagen
+35.	отде́лываться / отде́латься – (etwas/jemanden) loswerden; (mit etwas) davonkommen
+36.	освобожда́ться / освободи́ться – sich befreien
+37.	назо́йливый – aufdringlich, lästig
+38.	ро́дственники – die Verwandten
+39.	приде́лывать / приде́лать – anbringen, befestigen, anfügen
+40.	прикрепля́ть / прикрепи́ть – befestigen
+41.	ру́чка – der Griff, die Klinke; der Stift
+42.	отвали́ться (SV) – abfallen
+43.	клей – der Kleber
+44.	наде́лывать / наде́лать – eine große Menge herstellen; (Dummheiten/Fehler) anrichten
+45.	твори́ть / натвори́ть – (etwas Schlechtes) anstellen, anrichten
+46.	после́дствие – die Folge, die Konsequenz
+47.	подде́лывать / подде́лать – fälschen, nachmachen
+48.	подде́лка – die Fälschung
+49.	фальши́вый – falsch, gefälscht, unecht
+50.	настоя́щий – echt, wahr
+51.	по́дпись – die Unterschrift
+52.	разде́лывать / разде́лать – zerlegen, ausnehmen (Fleisch/Fisch/Geflügel)
+53.	ре́зать / разре́зать – schneiden, zerschneiden
+54.	нож – das Messer
+55.	ку́рица – das Huhn
+56.	подгота́вливать / подгото́вить – vorbereiten
+57.	разде́лываться / разде́латься – (mit einer Aufgabe) fertig werden; (mit jemandem) abrechnen/beseitigen
+58.	рассчи́тываться / рассчита́ться – sich revanchieren, abrechnen (auch Schulden begleichen)
+59.	долг – die Schuld, die Pflicht
+60.	выде́лывать / вы́делать – (Felle/Leder) gerben/bearbeiten; (Kapriolen) vollführen
+61.	обраба́тывать / обрабо́тать – bearbeiten, verarbeiten
+62.	материа́л – das Material, der Stoff
+63.	ко́жа – das Leder, die Haut
+64.	выкрута́сы – (ugs.) Kapriolen, Mätzchen, komplizierte Bewegungen
+65.	выде́лываться (NSV) – (ugs.) angeben, sich aufspielen, wichtigtun
+66.	хва́статься / похва́статься – prahlen, angeben
+67.	вообража́ть / вообрази́ть – sich etwas einbilden, angeben
+68.	высокоме́рный – arrogant, überheblich
+69.	вести́ себя́ – sich verhalten, sich benehmen
+`;
+
+        // --- INITIALISIERUNG ---
+        
+        let cards = [];
+        let currentDeck = []; // Das aktuell verwendete Deck (kann gemischt sein)
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        // Funktion zum Parsen der Rohdaten
+        function parseData(text) {
+            const lines = text.trim().split('\n');
+            return lines.map(line => {
+                // Entferne die Nummerierung am Anfang (z.B. "1. ")
+                const cleanLine = line.replace(/^\d+\.\s*/, '');
+                
+                // Trenne Russisch und Deutsch (Suche nach " – " oder " - ")
+                // Wir nutzen Regex, um verschiedene Bindestriche zu fangen
+                const parts = cleanLine.split(/\s[–-]\s/);
+                
+                if (parts.length >= 2) {
+                    return {
+                        front: parts[0].trim(),
+                        back: parts.slice(1).join(' - ').trim() // Falls mehr Bindestriche im deutschen Teil waren
+                    };
+                }
+                return null;
+            }).filter(item => item !== null);
+        }
+
+        // --- LOGIK ---
+
+        // DOM Elemente
+        const sceneEl = document.getElementById('scene');
+        const cardEl = document.getElementById('card');
+        const frontEl = document.getElementById('cardFront');
+        const backEl = document.getElementById('cardBack');
+        const progressEl = document.getElementById('progressDisplay');
+
+        // Starten
+        cards = parseData(rawData);
+        // Kopie für das aktuelle Deck erstellen (Reihenfolge 1-69)
+        currentDeck = [...cards]; 
+        updateCardDisplay();
+
+        // Event Listeners
+        
+        // 1. Karte Drehen (Klick)
+        sceneEl.addEventListener('click', flipCard);
+
+        // 2. Tastatursteuerung
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); // Verhindert Scrollen bei Leertaste
+                flipCard();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            } else if (e.code === 'Home') {
+                resetToStart();
+            }
+        });
+
+        // --- FUNKTIONEN ---
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                cardEl.classList.add('is-flipped');
+            } else {
+                cardEl.classList.remove('is-flipped');
+            }
+        }
+
+        function updateCardDisplay() {
+            const currentCard = currentDeck[currentIndex];
+            
+            // Text setzen
+            frontEl.textContent = currentCard.front;
+            backEl.textContent = currentCard.back;
+
+            // Schriftgröße anpassen je nach Länge
+            adjustFontSize(frontEl, currentCard.front);
+            adjustFontSize(backEl, currentCard.back);
+
+            // Flip zurücksetzen (ohne Animation beim Wechseln)
+            cardEl.style.transition = 'none';
+            cardEl.classList.remove('is-flipped');
+            isFlipped = false;
+            
+            // Layout reflow erzwingen, damit Transition wieder aktiviert werden kann
+            void cardEl.offsetWidth; 
+            cardEl.style.transition = 'transform 0.6s';
+
+            // Fortschrittsanzeige aktualisieren
+            progressEl.textContent = `Karte ${currentIndex + 1} / ${currentDeck.length}`;
+        }
+
+        function adjustFontSize(element, text) {
+            // Klassen zurücksetzen
+            element.classList.remove('text-short', 'text-medium', 'text-long');
+            
+            if (text.length < 25) {
+                element.classList.add('text-short');
+            } else if (text.length < 60) {
+                element.classList.add('text-medium');
+            } else {
+                element.classList.add('text-long');
+            }
+        }
+
+        function nextCard() {
+            if (currentIndex < currentDeck.length - 1) {
+                currentIndex++;
+                updateCardDisplay();
+            } else {
+                // Optional: Loop zum Anfang oder Feedback
+                // alert("Ende des Stapels erreicht!");
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCardDisplay();
+            }
+        }
+
+        function resetToStart() {
+            currentIndex = 0;
+            updateCardDisplay();
+        }
+
+        function shuffleDeck() {
+            // Fisher-Yates Shuffle
+            for (let i = currentDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+            }
+            currentIndex = 0;
+            updateCardDisplay();
+            
+            // Visuelles Feedback für das Mischen (kurzes Aufblinken)
+            progressEl.style.backgroundColor = '#81C784';
+            progressEl.textContent = "Gemischt!";
+            setTimeout(() => {
+                progressEl.style.backgroundColor = '#C8E6C9';
+                progressEl.textContent = `Karte ${currentIndex + 1} / ${currentDeck.length}`;
+            }, 800);
+        }
+
+    </script>
+</body>
+</html>
