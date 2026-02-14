@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Syntax & Fälle (ДЕЛАТЬ)</title>
+    <style>
+        :root {
+            --primary: #FF5722; /* Deep Orange */
+            --primary-dark: #E64A19;
+            --primary-light: #FFCCBC;
+            --bg-color: #fafafa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Footer */
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 10px; }
+        p.instruction { color: #666; font-size: 1.1rem; }
+
+        /* --- Liste der Sätze --- */
+        .sentence-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .sentence-wrapper {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap; /* Wichtig für Mobile */
+            align-items: center;
+            gap: 8px;
+        }
+
+        .translation {
+            font-size: 0.9rem;
+            color: #888;
+            font-style: italic;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* --- Dropdown Styles --- */
+        select.case-select {
+            appearance: none; /* Standard-Styling entfernen */
+            -webkit-appearance: none;
+            background-color: #f5f5f5;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            padding: 8px 30px 8px 15px; /* Platz für Pfeil rechts */
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            color: #333;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px auto;
+            min-width: 150px;
+            transition: all 0.3s;
+        }
+
+        select.case-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
+        }
+
+        /* Feedback States */
+        select.correct {
+            border-color: var(--success);
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        select.wrong {
+            border-color: var(--error);
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            .sentence-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            select.case-select {
+                width: 100%; /* Volle Breite auf Handy */
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Syntax & Rektion</h1>
+        <p class="instruction">
+            Wähle die richtige Endung oder Präposition für das Nomen aus.
+            <br>Achte darauf, welchen Fall das Verb verlangt.
+        </p>
+    </header>
+
+    <div id="quiz-list" class="sentence-list">
+        <!-- Fragen werden per JS generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    /*
+     * Datenstruktur:
+     * pre: Text vor der Lücke
+     * post: Text nach der Lücke
+     * correct: Die richtige Antwort
+     * options: Array aller Optionen (inkl. falscher)
+     * trans: Deutsche Übersetzung
+     * hint: Grammatischer Hinweis (optional)
+     */
+    const tasks = [
+        {
+            pre: "Мне нужно срочно переделать",
+            post: ".",
+            correct: "домашнее задание",
+            options: ["домашнее задание", "домашнего задания", "домашним заданием"],
+            trans: "Ich muss dringend die Hausaufgabe neu machen.",
+            hint: "Akkusativ (Wen/Was?)"
+        },
+        {
+            pre: "Я хочу поскорее отделаться",
+            post: ".",
+            correct: "от гостей",
+            options: ["от гостей", "с гостями", "гостей"],
+            trans: "Ich will die Gäste schnell loswerden.",
+            hint: "от + Genitiv (von wem?)"
+        },
+        {
+            pre: "Рабочим нужно заделать",
+            post: "в стене.",
+            correct: "дыру",
+            options: ["дыру", "дырой", "дыра"],
+            trans: "Die Arbeiter müssen das Loch in der Wand schließen.",
+            hint: "Akkusativ (Transitiv)"
+        },
+        {
+            pre: "Ювелир должен вделать камень",
+            post: ".",
+            correct: "в кольцо",
+            options: ["в кольцо", "в кольце", "кольцом"],
+            trans: "Der Juwelier muss den Stein in den Ring einsetzen.",
+            hint: "в + Akkusativ (Wohin? Bewegung)"
+        },
+        {
+            pre: "Когда я разделаюсь",
+            post: ", я позвоню тебе.",
+            correct: "с делами",
+            options: ["с делами", "от дел", "дела"],
+            trans: "Wenn ich mit den Aufgaben fertig bin, rufe ich dich an.",
+            hint: "с + Instrumental (Womit?)"
+        },
+        {
+            pre: "Нужно приделать",
+            post: "к шкафу.",
+            correct: "ручку",
+            options: ["ручку", "ручка", "ручкой"],
+            trans: "Man muss den Griff an den Schrank anbringen.",
+            hint: "Akkusativ (Was anbringen?)"
+        },
+        {
+            pre: "Туристы проделали",
+            post: ".",
+            correct: "долгий путь",
+            options: ["долгий путь", "долгим путём", "долгого пути"],
+            trans: "Die Touristen haben einen langen Weg zurückgelegt.",
+            hint: "Akkusativ"
+        },
+        {
+            pre: "На фабрике выделывают",
+            post: "для обуви.",
+            correct: "кожу",
+            options: ["кожу", "кожей", "коже"],
+            trans: "In der Fabrik bearbeitet man Leder für Schuhe.",
+            hint: "Akkusativ"
+        },
+        {
+            pre: "Осторожно! Ты уделаешь",
+            post: "!",
+            correct: "новую юбку",
+            options: ["новую юбку", "новой юбкой", "новой юбке"],
+            trans: "Vorsicht! Du wirst den neuen Rock einsauen!",
+            hint: "Akkusativ"
+        },
+        {
+            pre: "Повар начал разделывать",
+            post: ".",
+            correct: "рыбу",
+            options: ["рыбу", "рыбой", "рыбы"],
+            trans: "Der Koch fing an, den Fisch zu zerlegen.",
+            hint: "Akkusativ"
+        },
+        {
+            pre: "Студентка встала рано, чтобы доделать",
+            post: ".",
+            correct: "работу",
+            options: ["работу", "работой", "работы"],
+            trans: "Die Studentin stand früh auf, um die Arbeit fertigzustellen.",
+            hint: "Akkusativ"
+        },
+        {
+            pre: "Ой, я наделала столько",
+            post: "в тесте!",
+            correct: "ошибок",
+            options: ["ошибок", "ошибки", "ошибками"],
+            trans: "Oh, ich habe so viele Fehler im Test gemacht!",
+            hint: "Genitiv Plural (Menge)"
+        }
+    ];
+
+    const quizList = document.getElementById('quiz-list');
+
+    // Shuffle Funktion für die Optionen im Dropdown
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function init() {
+        quizList.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            // Optionen kopieren und mischen
+            // Wir müssen sicherstellen, dass wir eine Kopie machen
+            let currentOptions = [...task.options];
+            currentOptions = shuffle(currentOptions);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            // Select Element bauen
+            let selectHTML = `<select class="case-select" id="sel-${index}" onchange="checkAnswer(${index}, this)">`;
+            selectHTML += `<option value="" disabled selected>Wähle...</option>`; // Placeholder
+            
+            currentOptions.forEach(opt => {
+                selectHTML += `<option value="${opt}">${opt}</option>`;
+            });
+            selectHTML += `</select>`;
+
+            // Karte zusammenbauen
+            card.innerHTML = `
+                <div class="sentence-wrapper">
+                    <span>${task.pre}</span>
+                    ${selectHTML}
+                    <span>${task.post}</span>
+                </div>
+                <div class="translation">${task.trans} <span style="margin-left:10px; font-size:0.8em; color:#aaa;">${task.hint}</span></div>
+            `;
+            
+            quizList.appendChild(card);
+        });
+    }
+
+    // Sofortiges Feedback
+    window.checkAnswer = function(taskIndex, selectElement) {
+        const selectedValue = selectElement.value;
+        const correctValue = tasks[taskIndex].correct;
+
+        // Reset classes
+        selectElement.classList.remove('correct', 'wrong');
+
+        if (selectedValue === correctValue) {
+            selectElement.classList.add('correct');
+        } else {
+            selectElement.classList.add('wrong');
+        }
+    };
+
+    // Zurücksetzen
+    window.resetQuiz = function() {
+        // Alle Selects zurücksetzen
+        const selects = document.querySelectorAll('select');
+        selects.forEach(sel => {
+            sel.value = ""; // Zurück zum Placeholder
+            sel.classList.remove('correct', 'wrong');
+        });
+    };
+
+    // Lösung anzeigen
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const select = document.getElementById(`sel-${index}`);
+            select.value = task.correct;
+            // Visuelles Feedback für Lösung
+            select.classList.remove('wrong');
+            select.classList.add('correct');
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
