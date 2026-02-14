@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Definitionen zu ДЕЛАТЬ</title>
+    <style>
+        :root {
+            --primary: #009688; /* Teal */
+            --primary-dark: #00796B;
+            --bg-color: #f0f4f4;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #E53935;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Sticky Footer */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            color: #555;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* --- Grid Layout für die Fragenkarten --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .scenario {
+            font-weight: 500;
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            color: #444;
+        }
+
+        .scenario strong {
+            color: var(--primary-dark);
+        }
+
+        .options-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            color: #333;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            background-color: #e0f2f1;
+            border-color: var(--primary);
+        }
+
+        /* --- Feedback Styles --- */
+        .option-btn.correct {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        .option-btn.correct::after {
+            content: '✓';
+            float: right;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error);
+            border-color: var(--error);
+            color: white;
+            opacity: 0.9;
+        }
+        .option-btn.wrong::after {
+            content: '✗';
+            float: right;
+            font-weight: bold;
+        }
+
+        /* Deaktiviert Buttons nach richtiger Antwort */
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        /* Ausnahme: Die richtige Antwort bleibt voll sichtbar */
+        .disabled.correct {
+            opacity: 1;
+        }
+
+        /* --- Sticky Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border: 1px solid #ddd;
+            width: max-content;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: white;
+            transition: transform 0.1s;
+        }
+
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; } /* Orange */
+        #btn-solve { background-color: #607D8B; } /* Blue Grey */
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .controls { width: 85%; justify-content: center; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Definitionen & Situationen</h1>
+        <p class="instruction">Lies die Situation. Welches russische Verb mit <em>-ДЕЛАТЬ</em> passt am besten dazu? Wähle die richtige Antwort.</p>
+    </header>
+
+    <div id="quiz-grid" class="grid">
+        <!-- Karten werden per JS eingefügt -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Die 12 Aufgaben-Szenarien
+    const tasks = [
+        {
+            scenario: "Du hast einen Fehler in der Hausaufgabe gemacht und der Lehrer sagt, du sollst sie <strong>neu machen / korrigieren</strong>.",
+            correct: "переделать",
+            distractors: ["доделать", "поделать"]
+        },
+        {
+            scenario: "Du hast angefangen zu arbeiten, bist fast fertig und musst es jetzt nur noch <strong>zu Ende bringen</strong>.",
+            correct: "доделать",
+            distractors: ["разделать", "вделать"]
+        },
+        {
+            scenario: "In der Wand ist ein hässliches Loch. Du nimmst Gips und Werkzeug, um das Loch zu <strong>schließen</strong>.",
+            correct: "заделать",
+            distractors: ["приделать", "отделать"]
+        },
+        {
+            scenario: "Jemand hat keine echte Gucci-Tasche gekauft, sondern eine Fabrik hat die Marke <strong>gefälscht</strong>.",
+            correct: "подделать",
+            distractors: ["наделать", "сделать"]
+        },
+        {
+            scenario: "Der Griff vom Schrank ist abgefallen. Du nimmst einen Schraubenzieher und musst ihn wieder <strong>befestigen</strong>.",
+            correct: "приделать",
+            distractors: ["подделать", "выделать"]
+        },
+        {
+            scenario: "Ein Koch nimmt einen ganzen Fisch. Bevor er ihn braten kann, muss er ihn <strong>zerlegen / ausnehmen</strong>.",
+            correct: "разделать",
+            distractors: ["уделать", "вделать"]
+        },
+        {
+            scenario: "Jemand erzählt jedem, dass er superreich ist und 10 Autos hat, obwohl das nicht stimmt. Er <strong>spielt sich auf / gibt an</strong>.",
+            correct: "выделываться",
+            distractors: ["отделываться", "разделаться"]
+        },
+        {
+            scenario: "Ich habe gerade nichts Wichtiges zu tun. Ich werde einfach ein bisschen Hausarbeit <strong>machen (für kurze Zeit)</strong>.",
+            correct: "поделать",
+            distractors: ["доделать", "проделать"]
+        },
+        {
+            scenario: "Oh nein! Du bist in eine Pfütze gefallen und hast deine ganze Kleidung <strong>schmutzig gemacht / eingesaut</strong>. (Umgangssprachlich)",
+            correct: "уделать",
+            distractors: ["отделать", "сделать"]
+        },
+        {
+            scenario: "Die Verwandten waren sehr nervig. Ich war froh, als ich mich endlich von ihnen <strong>befreien / sie loswerden</strong> konnte.",
+            correct: "отделаться",
+            distractors: ["выделываться", "наделаться"]
+        },
+        {
+            scenario: "Der Juwelier hat einen Diamanten. Er muss den Stein nun fest in den Goldring <strong>einsetzen / einarbeiten</strong>.",
+            correct: "вделать",
+            distractors: ["разделать", "заделать"]
+        },
+        {
+            scenario: "Die Touristen sind sehr müde. Sie haben heute einen sehr langen Weg <strong>zurückgelegt</strong>.",
+            correct: "проделать",
+            distractors: ["переделать", "приделать"]
+        }
+    ];
+
+    const gridElement = document.getElementById('quiz-grid');
+
+    // Mischen-Funktion (Fisher-Yates)
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function init() {
+        gridElement.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            // Optionen mischen
+            let options = [task.correct, ...task.distractors];
+            options = shuffle(options);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${index}`;
+
+            // HTML Aufbau der Karte
+            let html = `
+                <div class="scenario">${task.scenario}</div>
+                <div class="options-wrapper">
+            `;
+
+            options.forEach(opt => {
+                html += `<button class="option-btn" onclick="checkAnswer(${index}, '${opt}', '${task.correct}', this)">${opt}</button>`;
+            });
+
+            html += `</div>`;
+            card.innerHTML = html;
+            gridElement.appendChild(card);
+        });
+    }
+
+    // Funktion für Sofort-Feedback
+    window.checkAnswer = function(cardIndex, selected, correct, btn) {
+        const card = document.getElementById(`card-${cardIndex}`);
+        
+        // Wenn der angeklickte Button bereits deaktiviert ist (passiert bei "Lösung anzeigen"), nichts tun
+        if(btn.classList.contains('disabled')) return;
+
+        if (selected === correct) {
+            // Richtige Antwort
+            btn.classList.add('correct');
+            
+            // Karte sperren: Alle Buttons deaktivieren
+            const allBtns = card.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.classList.add('disabled'));
+        } else {
+            // Falsche Antwort
+            btn.classList.add('wrong');
+            // Button deaktivieren, damit man nicht nochmal denselben falschen drückt
+            btn.classList.add('disabled');
+        }
+    };
+
+    // Zurücksetzen
+    window.resetQuiz = function() {
+        init(); // Baut alles neu auf
+    };
+
+    // Lösung anzeigen
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const buttons = card.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => {
+                // Reset visual states
+                btn.classList.remove('wrong', 'correct');
+                
+                // Wenn es die richtige Antwort ist -> grün markieren
+                if (btn.innerText === task.correct) {
+                    btn.classList.add('correct');
+                }
+                // Alle deaktivieren
+                btn.classList.add('disabled');
+            });
+        });
+    };
+
+    // Start beim Laden
+    init();
+
+</script>
+
+</body>
+</html>
