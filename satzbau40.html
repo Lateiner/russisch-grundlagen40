@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Satzbau-Puzzle</title>
+    <style>
+        :root {
+            --primary: #795548; /* Brown */
+            --primary-dark: #5D4037;
+            --primary-light: #D7CCC8;
+            --accent: #FF9800;
+            --bg-color: #f3e5f5; /* Light Purple tint */
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Footer */
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 5px; }
+        p.instruction { color: #555; max-width: 600px; margin: 0 auto; }
+
+        /* --- Puzzle Karte --- */
+        .puzzle-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .translation {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        /* --- Bereiche für Wörter --- */
+        .area-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .word-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 50px;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        /* Antwortbereich */
+        .target-area {
+            background-color: #fafafa;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .target-area.correct {
+            border-color: var(--success);
+            background-color: #e8f5e9;
+        }
+
+        .target-area.wrong {
+            border-color: var(--error);
+            background-color: #ffebee;
+        }
+
+        /* Quellbereich (Wortbank) */
+        .source-area {
+            background-color: #efebe9; /* Light Brown tint */
+            border: 1px dashed #bcaaa4;
+        }
+
+        /* --- Wort-Chips --- */
+        .word-chip {
+            background-color: #fff;
+            border: 1px solid #d7ccc8;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .word-chip:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .word-chip:active {
+            transform: scale(0.95);
+        }
+
+        /* --- Einzelner Check Button pro Karte --- */
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .feedback-inline {
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .feedback-inline.success { color: var(--success); }
+        .feedback-inline.error { color: var(--error); }
+
+        button.mini-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        button.mini-btn:hover { background-color: var(--primary-dark); }
+        
+        /* Gesperrt-Status nach richtiger Lösung */
+        .puzzle-card.solved .word-chip {
+            pointer-events: none;
+            cursor: default;
+            border-color: var(--success);
+            color: var(--success);
+        }
+        .puzzle-card.solved .mini-btn {
+            display: none;
+        }
+
+        /* --- Global Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .word-chip { padding: 6px 10px; font-size: 0.95rem; }
+            .container { padding: 10px; }
+            .puzzle-card { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Satzbau-Puzzle</h1>
+        <p class="instruction">
+            Tippe auf die Wörter, um sie in die richtige Reihenfolge zu bringen.
+            <br>Klicke auf "Prüfen" bei jedem Satz.
+        </p>
+    </header>
+
+    <div id="quiz-list">
+        <!-- Puzzles werden hier generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetAll()">Alles zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="solveAll()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Die 12 Sätze
+    // Satzzeichen sind an den Wörtern befestigt, um Hinweise auf Satzende zu geben.
+    const sentences = [
+        {
+            correct: "Нужно заделать дырку в стене.",
+            trans: "Man muss das Loch in der Wand schließen."
+        },
+        {
+            correct: "Студент должен переделать домашнее задание.",
+            trans: "Der Student muss die Hausaufgabe neu machen."
+        },
+        {
+            correct: "Я хочу доделать эту работу сегодня.",
+            trans: "Ich will diese Arbeit heute zu Ende bringen."
+        },
+        {
+            correct: "Этот магазин продаёт поддельные сумки.",
+            trans: "Dieser Laden verkauft gefälschte Taschen."
+        },
+        {
+            correct: "Папа приделал ручку к шкафу.",
+            trans: "Papa hat den Griff an den Schrank montiert."
+        },
+        {
+            correct: "Повар начал разделывать свежую рыбу.",
+            trans: "Der Koch begann, den frischen Fisch zu zerlegen."
+        },
+        {
+            correct: "Мы легко отделались от испуга.",
+            trans: "Wir sind mit einem Schrecken davongekommen."
+        },
+        {
+            correct: "Не надо так сильно выделываться!",
+            trans: "Du sollst nicht so sehr angeben!"
+        },
+        {
+            correct: "Я немного поделал уроки и отдохнул.",
+            trans: "Ich habe etwas Hausaufgaben gemacht und mich ausgeruht."
+        },
+        {
+            correct: "Боксер из Мексики уделал соперника.",
+            trans: "Der Boxer aus Mexiko hat den Gegner fertiggemacht."
+        },
+        {
+            correct: "Ты наделала много ошибок в тесте.",
+            trans: "Du hast viele Fehler im Test gemacht."
+        },
+        {
+            correct: "Мастер вделал красивый камень в кольцо.",
+            trans: "Der Meister hat einen schönen Stein in den Ring eingearbeitet."
+        }
+    ];
+
+    const listElement = document.getElementById('quiz-list');
+
+    // Array Mischen
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function init() {
+        listElement.innerHTML = '';
+
+        sentences.forEach((item, index) => {
+            // Wörter splitten
+            let words = item.correct.split(' ');
+            // Wörter mischen für die Source Area
+            let shuffledWords = shuffle([...words]);
+
+            const card = document.createElement('div');
+            card.className = 'puzzle-card';
+            card.id = `puzzle-${index}`;
+
+            // HTML Struktur
+            card.innerHTML = `
+                <div class="translation">${item.trans}</div>
+                
+                <div class="area-label">Deine Antwort:</div>
+                <div class="word-container target-area" id="target-${index}" onclick="handleContainerClick(event, 'target', ${index})"></div>
+                
+                <div class="area-label">Wörter:</div>
+                <div class="word-container source-area" id="source-${index}" onclick="handleContainerClick(event, 'source', ${index})">
+                    ${shuffledWords.map(word => `<div class="word-chip">${word}</div>`).join('')}
+                </div>
+
+                <div class="card-actions">
+                    <span class="feedback-inline" id="fb-${index}"></span>
+                    <button class="mini-btn" onclick="checkSentence(${index})">Prüfen</button>
+                </div>
+            `;
+            listElement.appendChild(card);
+        });
+    }
+
+    // Klick-Handler für Wort-Chips (Delegation)
+    window.handleContainerClick = function(e, type, index) {
+        // Prüfen, ob ein Wort-Chip geklickt wurde
+        if (!e.target.classList.contains('word-chip')) return;
+        
+        const chip = e.target;
+        const sourceBox = document.getElementById(`source-${index}`);
+        const targetBox = document.getElementById(`target-${index}`);
+        const card = document.getElementById(`puzzle-${index}`);
+
+        // Wenn bereits gelöst, keine Interaktion mehr
+        if (card.classList.contains('solved')) return;
+
+        // Reset Styles bei Änderung
+        targetBox.classList.remove('wrong');
+        document.getElementById(`fb-${index}`).textContent = '';
+
+        // Bewegen
+        if (type === 'source') {
+            targetBox.appendChild(chip);
+        } else {
+            sourceBox.appendChild(chip);
+        }
+    };
+
+    // Prüfen eines einzelnen Satzes
+    window.checkSentence = function(index) {
+        const targetBox = document.getElementById(`target-${index}`);
+        const feedbackEl = document.getElementById(`fb-${index}`);
+        const card = document.getElementById(`puzzle-${index}`);
+        
+        // Aktuelle Wörter im Target holen
+        const currentWords = Array.from(targetBox.children).map(chip => chip.textContent);
+        const userSentence = currentWords.join(' ');
+        const correctSentence = sentences[index].correct;
+
+        if (userSentence === correctSentence) {
+            // Richtig
+            targetBox.classList.remove('wrong');
+            targetBox.classList.add('correct');
+            feedbackEl.textContent = "Richtig!";
+            feedbackEl.className = "feedback-inline success";
+            card.classList.add('solved');
+        } else {
+            // Falsch
+            targetBox.classList.add('wrong');
+            
+            if (currentWords.length === 0) {
+                 feedbackEl.textContent = "Bitte Wörter auswählen.";
+            } else {
+                 feedbackEl.textContent = "Noch nicht ganz richtig.";
+            }
+            feedbackEl.className = "feedback-inline error";
+        }
+    };
+
+    // Alles zurücksetzen
+    window.resetAll = function() {
+        init();
+    };
+
+    // Lösung anzeigen
+    window.solveAll = function() {
+        sentences.forEach((item, index) => {
+            const sourceBox = document.getElementById(`source-${index}`);
+            const targetBox = document.getElementById(`target-${index}`);
+            const card = document.getElementById(`puzzle-${index}`);
+            const feedbackEl = document.getElementById(`fb-${index}`);
+
+            // Target leeren
+            targetBox.innerHTML = '';
+            sourceBox.innerHTML = ''; // Source auch leeren
+
+            // Korrekte Reihenfolge erstellen
+            const words = item.correct.split(' ');
+            words.forEach(word => {
+                const chip = document.createElement('div');
+                chip.className = 'word-chip';
+                chip.textContent = word;
+                targetBox.appendChild(chip);
+            });
+
+            // Visuelles Feedback
+            targetBox.classList.remove('wrong');
+            targetBox.classList.add('correct');
+            feedbackEl.textContent = "Gelöst";
+            feedbackEl.className = "feedback-inline success";
+            card.classList.add('solved');
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
