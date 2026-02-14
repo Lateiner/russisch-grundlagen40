@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Nuancierte Übersetzung</title>
+    <style>
+        :root {
+            --primary: #3F51B5; /* Indigo */
+            --primary-dark: #303F9F;
+            --bg-color: #f2f4f8;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 12px;
+            --hint-bg: #E8EAF6;
+            --hint-text: #3949AB;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 10px; }
+        p.instruction { color: #666; font-size: 1.1rem; max-width: 700px; margin: 0 auto; }
+
+        /* --- Grid Layout --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-top: 5px solid #ccc;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Deutscher Satz */
+        .german-sentence {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .nuance-hint {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        /* --- Antwort Buttons --- */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #444;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            background-color: #e8eaf6;
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        /* Feedback Styles */
+        .option-btn.correct {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white !important;
+        }
+        .option-btn.correct::after {
+            content: '✔';
+            position: absolute;
+            right: 15px;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error) !important;
+            border-color: var(--error) !important;
+            color: white !important;
+            opacity: 0.7;
+        }
+        .option-btn.wrong::after {
+            content: '✘';
+            position: absolute;
+            right: 15px;
+            font-weight: bold;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .disabled.correct { opacity: 1; }
+
+        /* Erklärung */
+        .explanation {
+            background-color: var(--hint-bg);
+            color: var(--hint-text);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none; /* Versteckt bis Antwort */
+            margin-top: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .controls { width: 90%; justify-content: center; }
+            h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Übersetzung & Nuancen</h1>
+        <p class="instruction">
+            Wähle den russischen Satz, der die Bedeutung und Nuance des deutschen Satzes am besten trifft.
+        </p>
+    </header>
+
+    <div id="quiz-grid" class="grid">
+        <!-- Aufgaben werden hier generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Aufgaben-Datenbank
+    const tasks = [
+        {
+            german: "Er hat die Unterschrift gefälscht.",
+            nuance: "Nuance: Kriminell / Nicht echt",
+            options: [
+                { text: "Он сделал подпись.", correct: false },
+                { text: "Он подделал подпись.", correct: true },
+                { text: "Он переделал подпись.", correct: false }
+            ],
+            explanation: "<strong>подделать</strong> bedeutet fälschen oder imitieren. <em>сделать</em> wäre neutral (gemacht), <em>переделать</em> hieße, er hat sie neu geschrieben/geändert."
+        },
+        {
+            german: "Wir haben das Loch in der Wand geschlossen.",
+            nuance: "Nuance: Reparieren / Dicht machen",
+            options: [
+                { text: "Мы заделали дыру в стене.", correct: true },
+                { text: "Мы приделали дыру в стене.", correct: false },
+                { text: "Мы отделали дыру в стене.", correct: false }
+            ],
+            explanation: "<strong>заделать</strong> wird verwendet, um Öffnungen oder Löcher zu schließen. <em>приделать</em> heißt befestigen, <em>отделать</em> heißt renovieren/dekorieren."
+        },
+        {
+            german: "Er gibt immer so an!",
+            nuance: "Nuance: Sich aufspielen / Wichtigtun",
+            options: [
+                { text: "Он вечно уделывается!", correct: false },
+                { text: "Он вечно выделывается!", correct: true },
+                { text: "Он вечно отделывается!", correct: false }
+            ],
+            explanation: "<strong>выделываться</strong> bedeutet umgangssprachlich angeben oder sich aufspielen (komische Bewegungen machen). <em>отделываться</em> heißt sich befreien."
+        },
+        {
+            german: "Die Jungs haben ihn verprügelt.",
+            nuance: "Nuance: Stark geschlagen / fertiggemacht",
+            options: [
+                { text: "Парни его отделали.", correct: true },
+                { text: "Парни его подделали.", correct: false },
+                { text: "Парни его вделали.", correct: false }
+            ],
+            explanation: "<strong>отделать</strong> (oder auch <em>уделать</em>) kann umgangssprachlich bedeuten, jemanden zu verprügeln."
+        },
+        {
+            german: "Ich habe ein bisschen gearbeitet.",
+            nuance: "Nuance: Kurze Zeit / Nicht viel",
+            options: [
+                { text: "Я поделал работу.", correct: true },
+                { text: "Я доделал работу.", correct: false },
+                { text: "Я проделал работу.", correct: false }
+            ],
+            explanation: "Das Präfix <strong>по-</strong> (поделал) signalisiert eine Begrenzung der Zeit ('ein bisschen', 'eine Weile')."
+        },
+        {
+            german: "Wir haben einen langen Weg zurückgelegt.",
+            nuance: "Nuance: Eine Strecke bewältigen",
+            options: [
+                { text: "Мы переделали долгий путь.", correct: false },
+                { text: "Мы проделали долгий путь.", correct: true },
+                { text: "Мы наделали долгий путь.", correct: false }
+            ],
+            explanation: "<strong>проделать</strong> wird oft mit 'Weg' (путь) oder 'Arbeit' (работа) verwendet, um auszudrücken, dass man eine Strecke oder Menge bewältigt hat."
+        },
+        {
+            german: "Oma hat Unmengen an Essen gemacht.",
+            nuance: "Nuance: Große Quantität hergestellt",
+            options: [
+                { text: "Бабушка вделала много еды.", correct: false },
+                { text: "Бабушка наделала много еды.", correct: true },
+                { text: "Бабушка заделала много еды.", correct: false }
+            ],
+            explanation: "<strong>наделать</strong> bedeutet, eine große Menge von etwas herzustellen."
+        },
+        {
+            german: "Ich will die Gäste endlich loswerden.",
+            nuance: "Nuance: Sich befreien (von etwas Lästigem)",
+            options: [
+                { text: "Я хочу отделаться от гостей.", correct: true },
+                { text: "Я хочу разделаться с гостями.", correct: false }, /* разделаться с = abrechnen/fertig machen, sehr aggressiv */
+                { text: "Я хочу выделаться от гостей.", correct: false }
+            ],
+            explanation: "<strong>отделаться</strong> bedeutet 'loswerden' oder 'sich befreien'. <em>разделаться</em> (mit Instrumental) klingt oft aggressiver (abrechnen/fertigmachen)."
+        },
+        {
+            german: "Der Text ist schlecht, mach ihn neu.",
+            nuance: "Nuance: Korrigieren / Noch einmal machen",
+            options: [
+                { text: "Текст плохой, доделай его.", correct: false },
+                { text: "Текст плохой, переделай его.", correct: true },
+                { text: "Текст плохой, подделай его.", correct: false }
+            ],
+            explanation: "<strong>переделать</strong> bedeutet, etwas noch einmal (anders/besser) zu machen."
+        },
+        {
+            german: "Pass auf, du saust dich ein!",
+            nuance: "Nuance: Schmutzig machen (Umgangssprachlich)",
+            options: [
+                { text: "Осторожно, ты уделаешься!", correct: true },
+                { text: "Осторожно, ты приделаешься!", correct: false },
+                { text: "Осторожно, ты наделаешься!", correct: false }
+            ],
+            explanation: "<strong>уделаться</strong> ist umgangssprachlich für 'sich schmutzig machen' (испачкаться)."
+        },
+        {
+            german: "Der Stein ist fest in den Ring eingearbeitet.",
+            nuance: "Nuance: Hineinsetzen / Einfassen",
+            options: [
+                { text: "Камень вделан в кольцо.", correct: true },
+                { text: "Камень сделан в кольцо.", correct: false },
+                { text: "Камень надделан в кольцо.", correct: false }
+            ],
+            explanation: "<strong>вделать</strong> bedeutet, etwas fest in ein Material einzufügen."
+        },
+        {
+            german: "Ich muss das Projekt zu Ende bringen.",
+            nuance: "Nuance: Fertigstellen / Abschließen",
+            options: [
+                { text: "Мне нужно доделать проект.", correct: true },
+                { text: "Мне нужно поделать проект.", correct: false },
+                { text: "Мне нужно переделать проект.", correct: false }
+            ],
+            explanation: "<strong>доделать</strong> bedeutet, etwas bis zum Ende zu führen (fertigzustellen)."
+        }
+    ];
+
+    const grid = document.getElementById('quiz-grid');
+
+    // Shuffle Array Funktion
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function init() {
+        grid.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            // Optionen mischen
+            // Wir erstellen eine Kopie und fügen den Original-Index hinzu, um später zu vergleichen
+            let mixedOptions = shuffle([...task.options]);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${index}`;
+
+            let optionsHtml = '';
+            mixedOptions.forEach(opt => {
+                // Wir speichern den Text, um später zu prüfen
+                optionsHtml += `<div class="option-btn" onclick="checkAnswer(${index}, '${opt.text}', ${opt.correct}, this)">${opt.text}</div>`;
+            });
+
+            card.innerHTML = `
+                <div>
+                    <div class="german-sentence">${task.german}</div>
+                    <div class="nuance-hint">${task.nuance}</div>
+                </div>
+                <div class="options-group">
+                    ${optionsHtml}
+                </div>
+                <div class="explanation" id="expl-${index}">${task.explanation}</div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    window.checkAnswer = function(index, text, isCorrect, btn) {
+        const card = document.getElementById(`card-${index}`);
+        const expl = document.getElementById(`expl-${index}`);
+        const buttons = card.querySelectorAll('.option-btn');
+
+        // Buttons deaktivieren
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            card.style.borderTopColor = 'var(--success)';
+        } else {
+            btn.classList.add('wrong');
+            card.style.borderTopColor = 'var(--error)';
+            
+            // Richtige Antwort anzeigen
+            buttons.forEach(b => {
+                // Wir suchen den Button mit dem korrekten Text aus den Originaldaten
+                const correctOption = tasks[index].options.find(o => o.correct);
+                if (b.innerText === correctOption.text) {
+                    b.classList.add('correct');
+                }
+            });
+        }
+        
+        // Erklärung immer anzeigen
+        expl.style.display = 'block';
+    };
+
+    window.resetQuiz = function() {
+        init();
+    };
+
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const buttons = card.querySelectorAll('.option-btn');
+            const expl = document.getElementById(`expl-${index}`);
+            
+            expl.style.display = 'block';
+            card.style.borderTopColor = 'var(--success)';
+
+            buttons.forEach(btn => {
+                btn.classList.remove('wrong', 'correct');
+                btn.classList.add('disabled');
+                
+                // Text Vergleich
+                const correctOption = task.options.find(o => o.correct);
+                if (btn.innerText === correctOption.text) {
+                    btn.classList.add('correct');
+                }
+            });
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
