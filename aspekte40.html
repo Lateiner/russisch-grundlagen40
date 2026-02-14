@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Aspekt-Paare bilden</title>
+    <!-- Polyfill für Touch-Geräte -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #007bff; /* Blau */
+            --primary-dark: #0056b3;
+            --secondary: #6c757d;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --success: #28a745;
+            --error: #dc3545;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 80px; /* Platz für Sticky Footer */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 5px; }
+        p.instruction { color: #666; }
+
+        /* --- Sticky Wortbank (Quelle) --- */
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            padding: 10px 0;
+            box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        .word-bank {
+            background-color: #e9ecef;
+            border: 2px dashed #ced4da;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+        }
+
+        .draggable {
+            background-color: #fff;
+            border: 1px solid #adb5bd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: grab;
+            font-weight: 500;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            user-select: none;
+            font-size: 0.95rem;
+        }
+
+        .draggable:active { cursor: grabbing; opacity: 0.8; }
+        .draggable.dragging { opacity: 0.5; }
+
+        /* --- Tabellen-Layout (CSS Grid) --- */
+        .grammar-table {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Kopfzeile (nur Desktop) */
+        .table-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr; /* Verhältnis der Spalten */
+            gap: 10px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            padding: 0 10px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Zeilen */
+        .table-row {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr; /* Muss mit Header übereinstimmen */
+            gap: 10px;
+            align-items: center;
+            border-left: 5px solid transparent; /* Für Hover Effekt */
+        }
+
+        .table-row:hover { border-left-color: var(--primary); }
+
+        .cell {
+            padding: 5px;
+            word-break: break-word;
+        }
+
+        /* Labels für Mobile (versteckt auf Desktop) */
+        .mobile-label { display: none; font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+
+        .meaning { font-style: italic; color: #555; }
+        .static-verb { font-weight: bold; color: #333; }
+
+        /* Dropzones */
+        .dropzone {
+            height: 38px;
+            background-color: #f1f3f5;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .dropzone.drag-over {
+            background-color: #cce5ff;
+            border-color: var(--primary);
+            border-style: dashed;
+        }
+
+        /* Feedback */
+        .dropzone.correct {
+            background-color: #d4edda;
+            border-color: var(--success);
+            color: var(--success);
+        }
+        
+        .dropzone.wrong {
+            background-color: #f8d7da;
+            border-color: var(--error);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+        #btn-reset { background-color: #ffc107; color: #333; }
+        #btn-solve { background-color: #6c757d; }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 600px) {
+            .table-header { display: none; } /* Header ausblenden */
+            
+            .table-row {
+                grid-template-columns: 1fr; /* Alles untereinander */
+                gap: 15px;
+                padding: 15px;
+                border: 1px solid #eee;
+            }
+
+            .mobile-label { display: block; } /* Labels anzeigen */
+            
+            .cell { padding: 0; }
+            
+            /* Bedeutung visuell abtrennen */
+            .cell:last-child {
+                border-top: 1px solid #eee;
+                padding-top: 10px;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Aspekt-Paare bilden</h1>
+        <p class="instruction">Ziehe die fehlende Form (NSW oder SW) in die richtige Lücke in der Tabelle. Achte auf das Suffix (meist <em>-ыва- / -ива-</em> bei NSW).</p>
+    </header>
+
+    <div class="sticky-wrapper">
+        <div class="word-bank" id="source-container">
+            <!-- Draggables werden hier generiert -->
+        </div>
+    </div>
+
+    <div class="grammar-table" id="table-container">
+        <div class="table-header">
+            <div>NSW (Unvollendet)</div>
+            <div>SW (Vollendet)</div>
+            <div>Bedeutung</div>
+        </div>
+
+        <!-- Zeilen werden per JS generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Datenbasis: 12 Paare
+    // gap: 'nsw' oder 'sw' bestimmt, wo die Lücke ist
+    const data = [
+        { id: 1, nsw: "делать", sw: "сделать", meaning: "machen / tun (Grundform)", gap: "nsw" },
+        { id: 2, nsw: "переделывать", sw: "переделать", meaning: "neu machen / umändern", gap: "nsw" },
+        { id: 3, nsw: "доделывать", sw: "доделать", meaning: "zu Ende machen", gap: "sw" },
+        { id: 4, nsw: "заделывать", sw: "заделать", meaning: "Loch schließen", gap: "nsw" },
+        { id: 5, nsw: "подделывать", sw: "подделать", meaning: "fälschen", gap: "sw" },
+        { id: 6, nsw: "приделывать", sw: "приделать", meaning: "befestigen / anbringen", gap: "sw" },
+        { id: 7, nsw: "разделывать", sw: "разделать", meaning: "zerlegen (Fisch/Fleisch)", gap: "nsw" },
+        { id: 8, nsw: "выделывать", sw: "выделать", meaning: "gerben / bearbeiten", gap: "nsw" },
+        { id: 9, nsw: "отделывать", sw: "отделать", meaning: "renovieren / ausbauen", gap: "sw" },
+        { id: 10, nsw: "уделывать", sw: "уделать", meaning: "beschmutzen / besiegen (Umg.)", gap: "sw" },
+        { id: 11, nsw: "наделывать", sw: "наделать", meaning: "Menge herstellen / anrichten", gap: "nsw" },
+        { id: 12, nsw: "вделывать", sw: "вделать", meaning: "einarbeiten / einfassen", gap: "nsw" }
+    ];
+
+    const tableContainer = document.getElementById('table-container');
+    const sourceContainer = document.getElementById('source-container');
+
+    function init() {
+        // Bereinigen (Header beibehalten)
+        const header = document.querySelector('.table-header');
+        tableContainer.innerHTML = '';
+        tableContainer.appendChild(header);
+        sourceContainer.innerHTML = '';
+
+        // Draggables Array erstellen
+        let draggables = [];
+
+        data.forEach(row => {
+            // Bestimmen, welches Wort fehlt
+            const missingWord = row.gap === 'nsw' ? row.nsw : row.sw;
+            
+            // Objekt für Wortbank
+            draggables.push({
+                val: missingWord,
+                id: `drag-${row.id}`
+            });
+
+            // Zeilen HTML bauen
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'table-row';
+
+            // Spalte 1: NSW
+            const col1 = document.createElement('div');
+            col1.className = 'cell';
+            col1.innerHTML = `<div class="mobile-label">NSW (Unvollendet)</div>`;
+            if (row.gap === 'nsw') {
+                col1.innerHTML += `<div class="dropzone" data-target="${row.nsw}"></div>`;
+            } else {
+                col1.innerHTML += `<span class="static-verb">${row.nsw}</span>`;
+            }
+
+            // Spalte 2: SW
+            const col2 = document.createElement('div');
+            col2.className = 'cell';
+            col2.innerHTML = `<div class="mobile-label">SW (Vollendet)</div>`;
+            if (row.gap === 'sw') {
+                col2.innerHTML += `<div class="dropzone" data-target="${row.sw}"></div>`;
+            } else {
+                col2.innerHTML += `<span class="static-verb">${row.sw}</span>`;
+            }
+
+            // Spalte 3: Bedeutung
+            const col3 = document.createElement('div');
+            col3.className = 'cell meaning';
+            col3.innerHTML = `<div class="mobile-label">Bedeutung</div>${row.meaning}`;
+
+            rowDiv.appendChild(col1);
+            rowDiv.appendChild(col2);
+            rowDiv.appendChild(col3);
+            tableContainer.appendChild(rowDiv);
+        });
+
+        // Draggables mischen und in Wortbank einfügen
+        draggables.sort(() => Math.random() - 0.5);
+        draggables.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'draggable';
+            el.draggable = true;
+            el.textContent = d.val;
+            el.dataset.val = d.val;
+            el.id = d.id;
+            sourceContainer.appendChild(el);
+        });
+
+        setupDragAndDrop();
+    }
+
+    function setupDragAndDrop() {
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+        const containers = [sourceContainer, ...dropzones];
+
+        draggables.forEach(d => {
+            d.addEventListener('dragstart', () => d.classList.add('dragging'));
+            d.addEventListener('dragend', () => d.classList.remove('dragging'));
+        });
+
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                // Source ist immer dropbar. Dropzones nur wenn leer.
+                const isSource = container === sourceContainer;
+                if (isSource || container.childElementCount === 0) {
+                    if (!isSource) container.classList.add('drag-over');
+                }
+            });
+
+            container.addEventListener('dragleave', () => container.classList.remove('drag-over'));
+
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                container.classList.remove('drag-over');
+                
+                const draggable = document.querySelector('.dragging');
+                if (!draggable) return;
+
+                const isSource = container === sourceContainer;
+
+                // Wenn Ziel Dropzone ist und schon voll, abbrechen
+                if (!isSource && container.childElementCount > 0) return;
+
+                container.appendChild(draggable);
+
+                // SOFORT-FEEDBACK LOGIK
+                if (!isSource) {
+                    const correctVal = container.dataset.target;
+                    const droppedVal = draggable.dataset.val;
+
+                    container.classList.remove('correct', 'wrong');
+
+                    if (correctVal === droppedVal) {
+                        // Richtig
+                        container.classList.add('correct');
+                        draggable.draggable = false; // Sperren
+                        draggable.style.cursor = 'default';
+                    } else {
+                        // Falsch
+                        container.classList.add('wrong');
+                        // Optional: Zurücksetzen nach Zeitverzögerung?
+                        // Wir lassen es rot, der User kann es rausziehen.
+                    }
+                } else {
+                    // Wenn zurück in Source gedroppt, Reset Styles
+                    // Aber wir müssen prüfen, ob es vorher gesperrt war? 
+                    // Nein, gesperrte sind nicht draggable.
+                }
+            });
+        });
+    }
+
+    window.resetQuiz = function() {
+        init();
+    };
+
+    window.showSolution = function() {
+        // Alle Draggables finden
+        const draggables = Array.from(document.querySelectorAll('.draggable'));
+        const dropzones = document.querySelectorAll('.dropzone');
+
+        dropzones.forEach(zone => {
+            const target = zone.dataset.target;
+            // Finde passendes Draggable (egal ob in Source oder falscher Zone)
+            const match = draggables.find(d => d.dataset.val === target);
+            if (match) {
+                zone.appendChild(match);
+                zone.classList.remove('wrong');
+                zone.classList.add('correct');
+                match.draggable = false;
+                match.style.cursor = 'default';
+            }
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
