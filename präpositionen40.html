@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Präpositionen (с vs от)</title>
+    <style>
+        :root {
+            --primary: #3F51B5; /* Indigo */
+            --primary-dark: #303F9F;
+            --accent-1: #00BCD4; /* Cyan for OT */
+            --accent-2: #9C27B0; /* Purple for S */
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Footer */
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 10px; }
+        p.instruction { color: #666; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* --- Grid Layout --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+            border-top: 5px solid #ddd; /* Neutral border start */
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .sentence {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .verb-highlight {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .noun-ending {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .translation {
+            font-size: 0.9rem;
+            color: #777;
+            font-style: italic;
+            margin-bottom: 20px;
+            min-height: 1.4em;
+        }
+
+        /* --- Entscheidungsknöpfe --- */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        /* Style für OT (Genitiv) */
+        .btn-ot {
+            background-color: #e0f7fa;
+            color: #006064;
+            border-color: #b2ebf2;
+        }
+        .btn-ot:hover:not(.disabled) { background-color: #b2ebf2; }
+
+        /* Style für S (Instrumental) */
+        .btn-s {
+            background-color: #f3e5f5;
+            color: #4a148c;
+            border-color: #e1bee7;
+        }
+        .btn-s:hover:not(.disabled) { background-color: #e1bee7; }
+
+        /* Feedback States */
+        .choice-btn.correct {
+            background-color: var(--success) !important;
+            color: white !important;
+            border-color: var(--success) !important;
+        }
+        .choice-btn.correct::after { content: '✓'; position: absolute; right: 10px; }
+
+        .choice-btn.wrong {
+            background-color: var(--error) !important;
+            color: white !important;
+            border-color: var(--error) !important;
+            opacity: 0.5;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        /* Korrekte Antwort bleibt sichtbar */
+        .disabled.correct { opacity: 1; }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: row; } /* Buttons nebeneinander lassen, ist besser zum Vergleich */
+            .controls { width: 90%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Präpositionen ergänzen</h1>
+        <p class="instruction">
+            Welche Präposition passt zum Verb und der Endung des Nomens?
+            <br>Wähle zwischen <strong>от</strong> (Genitiv) und <strong>с</strong> (Instrumental).
+        </p>
+    </header>
+
+    <div id="quiz-grid" class="grid">
+        <!-- Karten werden hier generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    /*
+     LOGIK:
+     отделаться от + Genitiv (Sich befreien von, loswerden, davonkommen)
+     разделаться с + Instrumental (Abrechnen mit, fertig werden mit, erledigen)
+     поделать с + Instrumental (Was kann man damit tun/machen?)
+     сделать с + Instrumental (Was hast du mit... gemacht?)
+    */
+
+    const tasks = [
+        {
+            text: "Я наконец-то <span class='verb-highlight'>отделался</span> ___ назойливых гост<span class='noun-ending'>ей</span>.",
+            trans: "Ich bin endlich die aufdringlichen Gäste losgeworden.",
+            correct: "ot"
+        },
+        {
+            text: "Бандиты хотели <span class='verb-highlight'>разделаться</span> ___ предател<span class='noun-ending'>ем</span>.",
+            trans: "Die Banditen wollten den Verräter beseitigen.",
+            correct: "s"
+        },
+        {
+            text: "Мне нужно срочно <span class='verb-highlight'>разделаться</span> ___ этими дела<span class='noun-ending'>ми</span>.",
+            trans: "Ich muss diese Angelegenheiten dringend erledigen.",
+            correct: "s"
+        },
+        {
+            text: "Он легко <span class='verb-highlight'>отделался</span> ___ штраф<span class='noun-ending'>а</span>.",
+            trans: "Er ist (nur) mit einem Bußgeld davongekommen.",
+            correct: "ot"
+        },
+        {
+            text: "Что ты <span class='verb-highlight'>сделал</span> ___ моим телефон<span class='noun-ending'>ом</span>?",
+            trans: "Was hast du mit meinem Telefon gemacht?",
+            correct: "s"
+        },
+        {
+            text: "Мы не могли <span class='verb-highlight'>отделаться</span> ___ чувств<span class='noun-ending'>а</span> страха.",
+            trans: "Wir konnten das Angstgefühl nicht loswerden.",
+            correct: "ot"
+        },
+        {
+            text: "Повар быстро <span class='verb-highlight'>разделался</span> ___ куриц<span class='noun-ending'>ей</span>.",
+            trans: "Der Koch hat das Huhn schnell zerlegt (ist damit fertig geworden).",
+            correct: "s"
+        },
+        {
+            text: "Я ничего не могу <span class='verb-highlight'>поделать</span> ___ эт<span class='noun-ending'>им</span>.",
+            trans: "Ich kann dagegen (damit) nichts tun.",
+            correct: "s"
+        },
+        {
+            text: "Ты хочешь просто <span class='verb-highlight'>отделаться</span> ___ мен<span class='noun-ending'>я</span>?",
+            trans: "Willst du mich einfach nur loswerden?",
+            correct: "ot"
+        },
+        {
+            text: "Сначала <span class='verb-highlight'>разделаюсь</span> ___ долга<span class='noun-ending'>ми</span>, потом отдохну.",
+            trans: "Erst begleiche ich die Schulden, dann ruhe ich mich aus.",
+            correct: "s"
+        },
+        {
+            text: "Он <span class='verb-highlight'>отделался</span> легким испуг<span class='noun-ending'>ом</span>.",
+            trans: "Er ist mit einem leichten Schrecken davongekommen. (Ausnahme: Instrumental ohne Präposition? Nein, hier Fokus auf 'davonkommen' -> OT verlangt Genitiv, aber Kontext: 'отделаться испугом' ist Instrumental *ohne* Präposition. Um Verwirrung zu vermeiden, ändern wir den Satz für die Übung auf 'от проблем' oder nutzen eine klare OT-Struktur).",
+            // KORREKTUR für Übungszweck: Wir nutzen einen klaren OT-Satz.
+            overrideText: "Как мне <span class='verb-highlight'>отделаться</span> ___ этой привычк<span class='noun-ending'>и</span>?",
+            overrideTrans: "Wie kann ich diese Angewohnheit loswerden?",
+            correct: "ot"
+        },
+        {
+            text: "Что мы будем <span class='verb-highlight'>делать</span> ___ эт<span class='noun-ending'>им</span>?",
+            trans: "Was werden wir damit machen?",
+            correct: "s"
+        }
+    ];
+
+    const grid = document.getElementById('quiz-grid');
+
+    function init() {
+        grid.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${index}`;
+            
+            // Text Override Check (für Korrekturen im Code)
+            const displayText = task.overrideText || task.text;
+            const displayTrans = task.overrideTrans || task.trans;
+
+            card.innerHTML = `
+                <div>
+                    <div class="sentence">${displayText}</div>
+                    <div class="translation">${displayTrans}</div>
+                </div>
+                <div class="btn-group">
+                    <button class="choice-btn btn-ot" onclick="checkAnswer(${index}, 'ot', this)">ОТ + Gen.</button>
+                    <button class="choice-btn btn-s" onclick="checkAnswer(${index}, 's', this)">С + Instr.</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Sofortiges Feedback
+    window.checkAnswer = function(index, choice, btn) {
+        const correct = tasks[index].correct;
+        const card = document.getElementById(`card-${index}`);
+        const buttons = card.querySelectorAll('.choice-btn');
+
+        // Karte visuell "locken" -> Alle Buttons disablen
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (choice === correct) {
+            // Richtig geklickt
+            btn.classList.add('correct');
+            card.style.borderTopColor = 'var(--success)';
+        } else {
+            // Falsch geklickt
+            btn.classList.add('wrong');
+            card.style.borderTopColor = 'var(--error)';
+            
+            // Den richtigen Button anzeigen, damit man lernt
+            buttons.forEach(b => {
+                // Wenn OT richtig ist und das der OT button ist -> grün markieren (passiv)
+                if (correct === 'ot' && b.classList.contains('btn-ot')) {
+                    b.classList.add('correct'); // Zeigt Lösung an
+                }
+                if (correct === 's' && b.classList.contains('btn-s')) {
+                    b.classList.add('correct');
+                }
+            });
+        }
+    };
+
+    // Zurücksetzen
+    window.resetQuiz = function() {
+        // Wir bauen das Grid einfach neu auf, das ist am saubersten
+        init();
+    };
+
+    // Lösung anzeigen
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const buttons = card.querySelectorAll('.choice-btn');
+            
+            buttons.forEach(btn => {
+                // Reset states
+                btn.classList.remove('wrong', 'correct');
+                btn.classList.add('disabled'); // Sperren
+
+                // Prüfen ob Button der richtige ist
+                const isOtBtn = btn.classList.contains('btn-ot');
+                const isSBtn = btn.classList.contains('btn-s');
+
+                if (task.correct === 'ot' && isOtBtn) {
+                    btn.classList.add('correct');
+                } else if (task.correct === 's' && isSBtn) {
+                    btn.classList.add('correct');
+                }
+            });
+            card.style.borderTopColor = 'var(--success)';
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
