@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Dialog-Ergänzung (Verbessertes Feedback)</title>
+    <style>
+        :root {
+            --primary: #5E35B1; /* Deep Purple */
+            --primary-light: #D1C4E9;
+            --bubble-a: #f5f5f5;
+            --bubble-b: #E3F2FD; 
+            
+            /* Feedback Farben */
+            --success-bg: #C8E6C9; 
+            --success-border: #2E7D32;
+            --success-text: #1B5E20;
+
+            --error-bg: #FFEBEE;
+            --error-border: #C62828;
+            --error-text: #B71C1C;
+            --error-btn-bg: #D32F2F;
+
+            --bg-color: #fafafa;
+            --text-color: #333;
+            --radius: 18px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 5px; }
+        p.instruction { color: #666; font-size: 1.1rem; }
+
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .dialog-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 5px solid #ccc; /* Neutraler Start */
+            transition: border-color 0.3s;
+        }
+
+        /* --- Chat Bubbles --- */
+        .message-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+
+        .message-row.left { justify-content: flex-start; }
+        .message-row.right { justify-content: flex-end; }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 10px;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .avatar.a { background-color: #FF7043; } /* Orange */
+        .avatar.b { background-color: #42A5F5; } /* Blue */
+
+        .bubble {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: var(--radius);
+            position: relative;
+            font-size: 1.05rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 2px solid transparent; /* Platzhalter für Border */
+            transition: all 0.3s ease;
+        }
+
+        .bubble.left {
+            background-color: var(--bubble-a);
+            border-bottom-left-radius: 4px;
+            color: #333;
+        }
+
+        .bubble.right {
+            background-color: var(--bubble-b);
+            border-bottom-right-radius: 4px;
+            text-align: left;
+            color: #000;
+        }
+
+        /* --- Feedback Styles für Blase --- */
+        .bubble.bubble-success {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+        }
+
+        .bubble.bubble-error {
+            background-color: var(--error-bg);
+            border-color: var(--error-border);
+        }
+
+        .translation-hint {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #777;
+            font-style: italic;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 4px;
+        }
+
+        /* Die Lücke */
+        .gap {
+            display: inline-block;
+            min-width: 60px;
+            border-bottom: 2px solid #999;
+            color: var(--primary);
+            font-weight: bold;
+            text-align: center;
+            padding: 0 4px;
+        }
+
+        /* Lücken Feedback */
+        .gap.filled-correct {
+            color: var(--success-text);
+            border-bottom: none;
+        }
+
+        .gap.filled-wrong {
+            color: var(--error-text);
+            text-decoration: line-through;
+            border-bottom: none;
+        }
+
+        /* --- Options Area --- */
+        .options-area {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding-right: 60px; 
+        }
+
+        .option-chip {
+            background-color: white;
+            border: 2px solid #ddd;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            user-select: none;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .option-chip:hover:not(.disabled) {
+            background-color: #ede7f6;
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Button Feedback States */
+        
+        /* 1. Richtig gewählt */
+        .option-chip.selected-correct {
+            background-color: var(--success-border);
+            color: white;
+            border-color: var(--success-border);
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.3);
+        }
+
+        /* 2. Falsch gewählt (Der "Böse" Button) */
+        .option-chip.selected-wrong {
+            background-color: var(--error-btn-bg);
+            color: white;
+            border-color: var(--error-btn-bg);
+            animation: shake 0.4s ease-in-out;
+            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.3);
+        }
+
+        /* 3. Korrektur-Anzeige (Der Button, der richtig gewesen wäre) */
+        .option-chip.reveal-correct {
+            background-color: white;
+            color: var(--success-text);
+            border-color: var(--success-border);
+            opacity: 1 !important;
+        }
+        .option-chip.reveal-correct::after {
+            content: ' (Richtig)';
+            font-size: 0.8em;
+        }
+
+        /* 4. Andere falsche Optionen (ausgrauen) */
+        .option-chip.dimmed {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .disabled {
+            pointer-events: none;
+        }
+
+        /* Fehlermeldung Text */
+        .feedback-msg {
+            text-align: right;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            margin-right: 60px;
+            min-height: 1.5em;
+            font-weight: bold;
+        }
+        .feedback-msg.error { color: var(--error-btn-bg); }
+        .feedback-msg.success { color: var(--success-text); }
+
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        @media (max-width: 600px) {
+            .container { padding: 10px; width: 95%; }
+            .bubble { max-width: 85%; font-size: 1rem; }
+            .options-area { justify-content: center; padding-right: 0; }
+            .feedback-msg { text-align: center; margin-right: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Dialoge ergänzen</h1>
+        <p class="instruction">
+            Lies den Chat. Was antwortet B? 
+            <br>Tippe auf die richtige Antwort.
+        </p>
+    </header>
+
+    <div id="chat-list" class="chat-list">
+        <!-- Dialoge werden hier generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    const dialogs = [
+        {
+            a: "Этот суп ужасный! Есть невозможно.",
+            b_pre: "Прости, наверное, я его плохо",
+            b_post: ".",
+            correct: "сделала",
+            options: ["сделала", "наделала", "разделала"],
+            hint: "(A: Die Suppe ist furchtbar! B: Ich habe sie wohl schlecht gemacht.)"
+        },
+        {
+            a: "Посмотри, какая дыра в стене!",
+            b_pre: "Не волнуйся, я завтра её",
+            b_post: ".",
+            correct: "заделаю",
+            options: ["заделаю", "отделаю", "приделаю"],
+            hint: "(B: Keine Sorge, ich werde sie morgen schließen.)"
+        },
+        {
+            a: "Ты уже закончил писать отчет?",
+            b_pre: "Почти, мне нужно только",
+            b_post: "выводы.",
+            correct: "доделать",
+            options: ["доделать", "переделать", "вделать"],
+            hint: "(B: Fast, ich muss nur das Fazit fertigstellen.)"
+        },
+        {
+            a: "Эта сумка Гуччи стоит всего 10 долларов?",
+            b_pre: "Да, потому что её",
+            b_post: "в Китае.",
+            correct: "подделали",
+            options: ["подделали", "наделали", "проделали"],
+            hint: "(B: Ja, weil man sie gefälscht hat.)"
+        },
+        {
+            a: "Откуда у тебя это пятно на рубашке?",
+            b_pre: "Я ел пиццу и",
+            b_post: "всё кетчупом.",
+            correct: "уделал",
+            options: ["уделал", "отделал", "сделал"],
+            hint: "(B: Ich habe Pizza gegessen und alles mit Ketchup eingesaut.)"
+        },
+        {
+            a: "Ты купил целую курицу? Она же огромная.",
+            b_pre: "Ничего, я сейчас её",
+            b_post: "на части.",
+            correct: "разделаю",
+            options: ["разделаю", "вделаю", "поделаю"],
+            hint: "(B: Macht nichts, ich zerlege sie gleich in Stücke.)"
+        },
+        {
+            a: "Твой сосед наконец ушел?",
+            b_pre: "Да, еле-еле",
+            b_post: "от него.",
+            correct: "отделался",
+            options: ["отделался", "разделался", "выделался"],
+            hint: "(B: Ja, ich bin ihn kaum losgeworden.)"
+        },
+        {
+            a: "Почему он всем говорит, что он миллионер?",
+            b_pre: "Он просто любит",
+            b_post: ".",
+            correct: "выделываться",
+            options: ["выделываться", "подделываться", "заделываться"],
+            hint: "(B: Er liebt es einfach, anzugeben.)"
+        },
+        {
+            a: "У стола ножка отвалилась.",
+            b_pre: "Давай клей, я сейчас её",
+            b_post: ".",
+            correct: "приделаю",
+            options: ["приделаю", "проделаю", "сделаю"],
+            hint: "(B: Gib mir Kleber, ich befestige sie gleich.)"
+        },
+        {
+            a: "Ты выглядишь очень уставшим.",
+            b_pre: "Еще бы! Мы",
+            b_post: "долгий путь пешком.",
+            correct: "проделали",
+            options: ["проделали", "переделали", "наделали"],
+            hint: "(B: Wir haben einen langen Weg zurückgelegt.)"
+        },
+        {
+            a: "Профессор сказал, что всё неправильно.",
+            b_pre: "О нет! Нам придется всё",
+            b_post: "?",
+            correct: "переделывать",
+            options: ["переделывать", "доделывать", "подделывать"],
+            hint: "(B: Müssen wir alles neu machen?)"
+        },
+        {
+            a: "Как прошел твой тест по математике?",
+            b_pre: "Плохо, я",
+            b_post: "много ошибок.",
+            correct: "наделал",
+            options: ["наделал", "вделал", "уделал"],
+            hint: "(B: Schlecht, ich habe viele Fehler gemacht.)"
+        }
+    ];
+
+    const chatList = document.getElementById('chat-list');
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function init() {
+        chatList.innerHTML = '';
+
+        dialogs.forEach((d, index) => {
+            let currentOptions = shuffle([...d.options]);
+
+            const container = document.createElement('div');
+            container.className = 'dialog-container';
+            container.id = `dialog-${index}`;
+
+            let html = `
+                <div class="message-row left">
+                    <div class="avatar a">A</div>
+                    <div class="bubble left">
+                        ${d.a}
+                    </div>
+                </div>
+
+                <div class="message-row right">
+                    <div class="bubble right" id="bubble-b-${index}">
+                        ${d.b_pre} 
+                        <span class="gap" id="gap-${index}">____</span> 
+                        ${d.b_post}
+                        <span class="translation-hint">${d.hint}</span>
+                    </div>
+                    <div class="avatar b">B</div>
+                </div>
+
+                <div class="options-area">
+            `;
+
+            currentOptions.forEach(opt => {
+                html += `<div class="option-chip" onclick="checkAnswer(${index}, '${opt}', '${d.correct}', this)">${opt}</div>`;
+            });
+
+            html += `</div>
+                     <div class="feedback-msg" id="fb-${index}"></div>`;
+            
+            container.innerHTML = html;
+            chatList.appendChild(container);
+        });
+    }
+
+    window.checkAnswer = function(index, selected, correct, btn) {
+        const dialog = document.getElementById(`dialog-${index}`);
+        const gap = document.getElementById(`gap-${index}`);
+        const bubbleB = document.getElementById(`bubble-b-${index}`);
+        const feedbackMsg = document.getElementById(`fb-${index}`);
+        const buttons = dialog.querySelectorAll('.option-chip');
+
+        // Alle Buttons sperren
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (selected === correct) {
+            // --- RICHTIG ---
+            btn.classList.add('selected-correct');
+            
+            // Gap füllen
+            gap.textContent = selected;
+            gap.classList.remove('filled-wrong');
+            gap.classList.add('filled-correct');
+            
+            // Blase färben
+            bubbleB.classList.remove('bubble-error');
+            bubbleB.classList.add('bubble-success');
+            
+            // Container Border
+            dialog.style.borderLeftColor = 'var(--success-border)';
+
+            // Andere ausgrauen
+            buttons.forEach(b => {
+                if(b !== btn) b.classList.add('dimmed');
+            });
+            
+            feedbackMsg.textContent = "Richtig!";
+            feedbackMsg.className = "feedback-msg success";
+
+        } else {
+            // --- FALSCH ---
+            btn.classList.add('selected-wrong');
+            
+            // Gap füllen mit falschem Wort (durchgestrichen)
+            gap.textContent = selected;
+            gap.classList.add('filled-wrong');
+            
+            // Blase Rot färben
+            bubbleB.classList.add('bubble-error');
+
+            // Container Border Rot
+            dialog.style.borderLeftColor = 'var(--error-border)';
+
+            // Richtige Antwort anzeigen
+            buttons.forEach(b => {
+                if (b.innerText === correct) {
+                    b.classList.add('reveal-correct');
+                } else if (b !== btn) {
+                    b.classList.add('dimmed');
+                }
+            });
+
+            feedbackMsg.textContent = "Leider falsch.";
+            feedbackMsg.className = "feedback-msg error";
+        }
+    };
+
+    window.resetQuiz = function() {
+        init();
+    };
+
+    window.showSolution = function() {
+        dialogs.forEach((d, index) => {
+            const dialog = document.getElementById(`dialog-${index}`);
+            const buttons = dialog.querySelectorAll('.option-chip');
+            const gap = document.getElementById(`gap-${index}`);
+            const bubbleB = document.getElementById(`bubble-b-${index}`);
+            const feedbackMsg = document.getElementById(`fb-${index}`);
+
+            // Reset States
+            bubbleB.classList.remove('bubble-error');
+            bubbleB.classList.add('bubble-success');
+            
+            gap.textContent = d.correct;
+            gap.classList.remove('filled-wrong');
+            gap.classList.add('filled-correct');
+
+            dialog.style.borderLeftColor = 'var(--success-border)';
+            feedbackMsg.textContent = "Lösung angezeigt";
+            feedbackMsg.className = "feedback-msg";
+
+            buttons.forEach(btn => {
+                btn.classList.add('disabled');
+                btn.classList.remove('selected-wrong', 'dimmed', 'reveal-correct');
+                
+                if (btn.innerText === d.correct) {
+                    btn.classList.add('selected-correct');
+                } else {
+                    btn.classList.add('dimmed');
+                }
+            });
+        });
+    };
+
+    init();
+
+</script>
+
+</body>
+</html>
