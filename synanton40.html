@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Synonyme & Antonyme (ДЕЛАТЬ)</title>
+    <style>
+        :root {
+            --primary: #673AB7; /* Deep Purple */
+            --primary-light: #D1C4E9;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 80px; /* Platz für Sticky Footer */
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            color: #555;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Grid Layout --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-box {
+            margin-bottom: 15px;
+        }
+
+        .label {
+            display: inline-block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .target-word {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+
+        .translation {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background-color: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            color: #333;
+            position: relative;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        /* Feedback Styles */
+        .option-btn.success {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+            font-weight: bold;
+        }
+
+        .option-btn.success::after {
+            content: '✓';
+            position: absolute;
+            right: 15px;
+        }
+
+        .option-btn.error {
+            background-color: var(--error);
+            border-color: var(--error);
+            color: white;
+            opacity: 0.8;
+        }
+
+        .option-btn.error::after {
+            content: '✗';
+            position: absolute;
+            right: 15px;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* --- Sticky Footer Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border: 1px solid #ddd;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: white;
+            transition: filter 0.2s;
+        }
+
+        button.ctrl-btn:hover { filter: brightness(110%); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .controls { 
+                width: 90%; 
+                justify-content: center;
+                bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Synonyme & Antonyme</h1>
+        <p class="instruction">Wähle das passende Verb, das die gesuchte Bedeutung hat. <br>Du erhältst sofortiges Feedback (Grün = Richtig, Rot = Falsch).</p>
+    </header>
+
+    <div id="quiz-grid" class="grid">
+        <!-- Karten werden per Javascript generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Datenbasis: 12 Aufgaben (Synonyme oder Antonyme)
+    const tasks = [
+        {
+            type: "Synonym",
+            target: "испачкать",
+            trans: "beschmutzen / einsauen",
+            correct: "уделать",
+            distractors: ["сделать", "отделать"]
+        },
+        {
+            type: "Antonym",
+            target: "сломать",
+            trans: "kaputt machen",
+            correct: "сделать", // Im Sinne von reparieren/wieder ganz machen (Context: Transcript)
+            distractors: ["разделать", "наделать"]
+        },
+        {
+            type: "Synonym",
+            target: "изменить",
+            trans: "ändern / korrigieren",
+            correct: "переделать",
+            distractors: ["доделать", "подделать"]
+        },
+        {
+            type: "Synonym",
+            target: "закончить",
+            trans: "beenden / fertigstellen",
+            correct: "доделать",
+            distractors: ["поделать", "заделать"]
+        },
+        {
+            type: "Synonym",
+            target: "ликвидировать дыру",
+            trans: "ein Loch beseitigen / schließen",
+            correct: "заделать",
+            distractors: ["приделать", "выделать"]
+        },
+        {
+            type: "Synonym",
+            target: "победить",
+            trans: "besiegen (umgangssprachlich)",
+            correct: "уделать",
+            distractors: ["разделать", "сделать"]
+        },
+        {
+            type: "Synonym",
+            target: "вставить",
+            trans: "hineinsetzen / einarbeiten",
+            correct: "вделать",
+            distractors: ["наделать", "отделать"]
+        },
+        {
+            type: "Synonym",
+            target: "совершить путь",
+            trans: "einen Weg zurücklegen",
+            correct: "проделать",
+            distractors: ["переделать", "подделать"]
+        },
+        {
+            type: "Synonym",
+            target: "освободиться",
+            trans: "sich befreien / loswerden",
+            correct: "отделаться",
+            distractors: ["выделываться", "разделаться"]
+        },
+        {
+            type: "Synonym",
+            target: "сфальсифицировать",
+            trans: "fälschen (z.B. Dokumente)",
+            correct: "подделать",
+            distractors: ["приделать", "наделать"]
+        },
+        {
+            type: "Synonym",
+            target: "прикрепить",
+            trans: "befestigen / anbringen",
+            correct: "приделать",
+            distractors: ["заделать", "отделать"]
+        },
+        {
+            type: "Synonym",
+            target: "хвастаться",
+            trans: "angeben / sich aufspielen",
+            correct: "выделываться",
+            distractors: ["уделываться", "отделываться"]
+        }
+    ];
+
+    const gridElement = document.getElementById('quiz-grid');
+
+    // Mischen-Funktion
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function init() {
+        gridElement.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            // Optionen vorbereiten
+            let options = [task.correct, ...task.distractors];
+            options = shuffle(options);
+
+            // Karte erstellen
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${index}`;
+
+            // HTML Inhalt
+            let html = `
+                <div class="question-box">
+                    <span class="label">Gesucht: ${task.type} für</span>
+                    <div class="target-word">${task.target}</div>
+                    <div class="translation">(${task.trans})</div>
+                </div>
+                <div class="options-container">
+            `;
+
+            options.forEach(opt => {
+                html += `<button class="option-btn" onclick="checkAnswer(${index}, '${opt}', '${task.correct}', this)">${opt}</button>`;
+            });
+
+            html += `</div>`;
+            card.innerHTML = html;
+            gridElement.appendChild(card);
+        });
+    }
+
+    // Antwort prüfen
+    window.checkAnswer = function(cardIndex, selected, correct, btn) {
+        const card = document.getElementById(`card-${cardIndex}`);
+        
+        // Verhindern, dass man weiter klickt, wenn schon gelöst (optional, hier lassen wir Korrektur zu bis richtig)
+        // Aber wir sperren den Button, der gerade geklickt wurde, damit man nicht spammt.
+        
+        if (selected === correct) {
+            // Richtig
+            btn.classList.add('success');
+            // Alle anderen Buttons in dieser Karte deaktivieren
+            const allBtns = card.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.classList.add('disabled'));
+        } else {
+            // Falsch
+            btn.classList.add('error');
+            // Button deaktivieren, damit man ihn nicht nochmal klickt
+            btn.classList.add('disabled');
+        }
+    };
+
+    // Zurücksetzen
+    window.resetQuiz = function() {
+        init();
+    };
+
+    // Lösung anzeigen
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const buttons = card.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => {
+                // Reset styles
+                btn.classList.remove('error', 'success', 'disabled');
+                
+                // Richtiges markieren
+                if (btn.innerText === task.correct) {
+                    btn.classList.add('success');
+                }
+                // Alle deaktivieren
+                btn.classList.add('disabled');
+            });
+        });
+    };
+
+    // Starten
+    init();
+
+</script>
+
+</body>
+</html>
