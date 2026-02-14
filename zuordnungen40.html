@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Semantik von ДЕЛАТЬ (12 Aufgaben)</title>
+    <!-- Polyfill für Touch-Geräte -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-dark: #303f9f;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --success: #4caf50;
+            --error: #f44336;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0; /* Padding im Container, damit Sticky funktioniert */
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 0;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* --- Sticky Wortbank --- */
+        .sticky-wrapper {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            background-color: var(--card-bg);
+            z-index: 1000;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 4px 6px -4px rgba(0,0,0,0.2);
+        }
+
+        .word-bank {
+            background-color: #e8eaf6;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: 2px dashed #c5cae9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            min-height: 50px;
+            max-height: 30vh; /* Damit es nicht den ganzen Screen einnimmt */
+            overflow-y: auto; /* Scrollbar in der Bank, falls nötig */
+        }
+
+        .draggable {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: grab;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* --- Die Zuordnungs-Tabelle --- */
+        .matching-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .match-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* Links Begriff, Rechts Lücke */
+            gap: 10px;
+            align-items: center;
+            background: #fff;
+            padding: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .russian-term {
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 1rem;
+            padding: 8px;
+            background-color: #f0f2f5;
+            border-radius: 4px;
+            text-align: right;
+            border-right: 4px solid var(--primary);
+        }
+
+        .dropzone {
+            min-height: 40px;
+            background-color: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .dropzone.drag-over {
+            background-color: #e3f2fd;
+            border-color: var(--primary);
+            border-style: dashed;
+        }
+
+        /* Feedback-Status */
+        .correct {
+            border-color: var(--success) !important;
+            background-color: #e8f5e9 !important;
+        }
+        
+        .wrong {
+            border-color: var(--error) !important;
+            background-color: #ffebee !important;
+        }
+
+        /* --- Buttons --- */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-bottom: 40px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: white;
+            min-width: 130px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #btn-check { background-color: var(--primary); }
+        #btn-reset { background-color: #ff9800; }
+        #btn-solve { background-color: #757575; }
+
+        .feedback-msg {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        /* --- Mobile Optimierung --- */
+        @media (max-width: 600px) {
+            .match-row {
+                grid-template-columns: 1fr; /* Stapeln */
+                gap: 2px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #eee;
+            }
+
+            .russian-term {
+                text-align: left;
+                border-right: none;
+                border-left: 4px solid var(--primary);
+                margin-bottom: 5px;
+            }
+
+            .dropzone {
+                min-height: 45px;
+            }
+            
+            /* Wortbank etwas kleiner auf Handy damit sie nicht zu viel Platz stiehlt */
+            .word-bank {
+                max-height: 25vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Zuordnungsaufgabe: ДЕЛАТЬ (12 Begriffe)</h1>
+    
+    <p class="instruction">
+        Ziehen Sie die deutsche Bedeutung in das Feld neben dem passenden russischen Verb.
+        <br><small>Die Wortliste oben bleibt beim Scrollen sichtbar.</small>
+    </p>
+
+    <!-- Sticky Container für die Wortbank -->
+    <div class="sticky-wrapper">
+        <div class="word-bank" id="source-container">
+            <!-- Elemente werden per JS hier gemischt eingefügt -->
+        </div>
+    </div>
+
+    <!-- Zielbereich (Tabelle mit 12 Einträgen) -->
+    <div class="matching-list">
+        
+        <!-- 1 -->
+        <div class="match-row">
+            <div class="russian-term">переделать</div>
+            <div class="dropzone" data-target="umandern"></div>
+        </div>
+        <!-- 2 -->
+        <div class="match-row">
+            <div class="russian-term">доделать</div>
+            <div class="dropzone" data-target="ende"></div>
+        </div>
+        <!-- 3 -->
+        <div class="match-row">
+            <div class="russian-term">заделать</div>
+            <div class="dropzone" data-target="loch"></div>
+        </div>
+        <!-- 4 -->
+        <div class="match-row">
+            <div class="russian-term">подделать</div>
+            <div class="dropzone" data-target="faelschen"></div>
+        </div>
+        <!-- 5 -->
+        <div class="match-row">
+            <div class="russian-term">приделать</div>
+            <div class="dropzone" data-target="befestigen"></div>
+        </div>
+        <!-- 6 -->
+        <div class="match-row">
+            <div class="russian-term">разделать</div>
+            <div class="dropzone" data-target="zerlegen"></div>
+        </div>
+        <!-- 7 -->
+        <div class="match-row">
+            <div class="russian-term">выделываться</div>
+            <div class="dropzone" data-target="angeben"></div>
+        </div>
+        <!-- 8 (Neu) -->
+        <div class="match-row">
+            <div class="russian-term">поделать</div>
+            <div class="dropzone" data-target="wenig"></div>
+        </div>
+        <!-- 9 (Neu) -->
+        <div class="match-row">
+            <div class="russian-term">уделать</div>
+            <div class="dropzone" data-target="einsauen"></div>
+        </div>
+        <!-- 10 (Neu) -->
+        <div class="match-row">
+            <div class="russian-term">отделаться</div>
+            <div class="dropzone" data-target="loswerden"></div>
+        </div>
+        <!-- 11 (Neu) -->
+        <div class="match-row">
+            <div class="russian-term">вделать</div>
+            <div class="dropzone" data-target="einsetzen"></div>
+        </div>
+        <!-- 12 (Neu) -->
+        <div class="match-row">
+            <div class="russian-term">проделать</div>
+            <div class="dropzone" data-target="weg"></div>
+        </div>
+
+    </div>
+
+    <div class="feedback-msg" id="feedback"></div>
+
+    <div class="controls">
+        <button id="btn-check" onclick="checkAnswers()">Überprüfen</button>
+        <button id="btn-reset" onclick="resetExercise()">Zurücksetzen</button>
+        <button id="btn-solve" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    // Daten für 12 Draggables
+    const definitions = [
+        { id: "d1", val: "umandern", text: "umändern / korrigieren" },
+        { id: "d2", val: "ende", text: "etwas zu Ende bringen" },
+        { id: "d3", val: "loch", text: "ein Loch schließen" },
+        { id: "d4", val: "faelschen", text: "etwas fälschen" },
+        { id: "d5", val: "befestigen", text: "befestigen / anfügen" },
+        { id: "d6", val: "zerlegen", text: "zerlegen (Fleisch/Fisch)" },
+        { id: "d7", val: "angeben", text: "angeben / sich aufspielen" },
+        { id: "d8", val: "wenig", text: "etwas ein wenig tun" },
+        { id: "d9", val: "einsauen", text: "stark beschmutzen / einsauen" },
+        { id: "d10", val: "loswerden", text: "sich befreien / loswerden" },
+        { id: "d11", val: "einsetzen", text: "einarbeiten / einsetzen" },
+        { id: "d12", val: "weg", text: "Weg zurücklegen / durchmachen" }
+    ];
+
+    const sourceContainer = document.getElementById('source-container');
+    const feedbackEl = document.getElementById('feedback');
+    const dropzones = document.querySelectorAll('.dropzone');
+
+    // Initialisierung: Elemente mischen und in Source legen
+    function init() {
+        const shuffled = [...definitions].sort(() => 0.5 - Math.random());
+        
+        sourceContainer.innerHTML = ''; // Leere Source
+        shuffled.forEach(item => {
+            const el = document.createElement('div');
+            el.classList.add('draggable');
+            el.setAttribute('draggable', 'true');
+            el.setAttribute('id', item.id);
+            el.setAttribute('data-val', item.val);
+            el.innerText = item.text;
+            sourceContainer.appendChild(el);
+        });
+
+        setupDragEvents();
+    }
+
+    // Drag & Drop Event Listeners
+    function setupDragEvents() {
+        const draggables = document.querySelectorAll('.draggable');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+            });
+        });
+
+        // Alle Drop-Ziele (Source + Dropzones)
+        const containers = [...document.querySelectorAll('.dropzone'), sourceContainer];
+
+        containers.forEach(container => {
+            // Alte Listener entfernen wäre sauberer, aber hier überschreiben wir nicht, da init() Elemente neu erstellt.
+            // Nur Container-Listener bleiben. Um Mehrfachbindung zu verhindern, nutzen wir eine einfache Logik:
+            // Da 'resetExercise' init() aufruft, aber die 'containers' (die dropzones) statisch im HTML sind,
+            // müssen wir aufpassen, Listener nicht doppelt zu binden.
+            // Lösung: Wir binden die Listener nur EINMAL beim Laden der Seite, nicht in init().
+        });
+    }
+
+    // Listener einmalig global binden
+    function bindGlobalListeners() {
+        const containers = [...document.querySelectorAll('.dropzone'), sourceContainer];
+        
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const isSource = container.id === 'source-container';
+                if(isSource || container.childElementCount === 0) {
+                     if(!isSource) container.classList.add('drag-over');
+                }
+            });
+
+            container.addEventListener('dragleave', () => {
+                container.classList.remove('drag-over');
+            });
+
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                container.classList.remove('drag-over');
+                
+                const draggable = document.querySelector('.dragging');
+                if(!draggable) return;
+
+                const isSource = container.id === 'source-container';
+
+                // Logik: Dropzone darf nur 1 Element haben (außer Source)
+                if (!isSource && container.childElementCount > 0) {
+                    return; // Schon voll
+                }
+
+                container.appendChild(draggable);
+                
+                // Feedback zurücksetzen bei Interaktion
+                container.classList.remove('correct', 'wrong');
+                feedbackEl.textContent = "";
+            });
+        });
+    }
+
+    // --- Button Funktionen ---
+
+    function checkAnswers() {
+        let correctCount = 0;
+        let allFilled = true;
+
+        dropzones.forEach(zone => {
+            zone.classList.remove('correct', 'wrong');
+
+            if (zone.children.length === 0) {
+                allFilled = false;
+                zone.classList.add('wrong'); 
+            } else {
+                const item = zone.children[0];
+                if (item.dataset.val === zone.dataset.target) {
+                    zone.classList.add('correct');
+                    correctCount++;
+                } else {
+                    zone.classList.add('wrong');
+                }
+            }
+        });
+
+        if (correctCount === dropzones.length) {
+            feedbackEl.textContent = "Perfekt! Alle 12 richtig zugeordnet.";
+            feedbackEl.style.color = "var(--success)";
+        } else {
+            feedbackEl.textContent = `Ergebnis: ${correctCount} von ${dropzones.length} richtig.`;
+            feedbackEl.style.color = "var(--error)";
+        }
+    }
+
+    function resetExercise() {
+        // 1. Alle Dropzones leeren (WICHTIG für korrekten Reset)
+        dropzones.forEach(zone => {
+            zone.innerHTML = ''; 
+            zone.classList.remove('correct', 'wrong');
+        });
+        
+        // 2. Feedback löschen
+        feedbackEl.textContent = "";
+
+        // 3. Neu initialisieren (erstellt Draggables neu in Source)
+        init();
+    }
+
+    function showSolution() {
+        // Wir holen alle Draggables, egal wo sie gerade liegen
+        const allDraggables = Array.from(document.querySelectorAll('.draggable'));
+
+        dropzones.forEach(zone => {
+            const targetVal = zone.dataset.target;
+            const correctItem = allDraggables.find(d => d.dataset.val === targetVal);
+            
+            if (correctItem) {
+                // Verschieben in die richtige Zone
+                zone.appendChild(correctItem);
+                zone.classList.remove('wrong');
+                zone.classList.add('correct');
+            }
+        });
+        
+        // Übrige Elemente im Source Container? Sollten keine sein, wenn Logic stimmt.
+        feedbackEl.textContent = "Lösung angezeigt.";
+        feedbackEl.style.color = "#333";
+    }
+
+    // Start beim Laden
+    window.addEventListener('DOMContentLoaded', () => {
+        bindGlobalListeners(); // Listener für Dropzones nur einmal binden
+        init(); // Inhalte erstellen
+    });
+
+</script>
+
+</body>
+</html>
