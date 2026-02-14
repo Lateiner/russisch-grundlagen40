@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Stil-Check (ДЕЛАТЬ)</title>
+    <style>
+        :root {
+            /* Stil-Farben */
+            --colloquial: #FF9800; /* Orange */
+            --neutral: #2196F3; /* Blue */
+            --formal: #607D8B; /* Blue Grey */
+            
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: #37474F; margin-bottom: 10px; }
+        p.instruction { color: #666; font-size: 1.1rem; }
+
+        /* --- Grid --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* --- Karte --- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+            border-top: 5px solid #ddd;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .sentence {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .verb-highlight {
+            font-weight: bold;
+            background-color: #e3f2fd;
+            padding: 0 4px;
+            border-radius: 4px;
+            color: #0d47a1;
+        }
+
+        .translation {
+            font-size: 0.9rem;
+            color: #777;
+            font-style: italic;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        /* --- Buttons --- */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .style-btn {
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background-color: #f5f5f5;
+            color: #555;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .style-btn:hover:not(.disabled) {
+            background-color: #e0e0e0;
+        }
+
+        /* Spezifische Hover Farben */
+        .btn-neutral:hover:not(.disabled) { border-color: var(--neutral); color: var(--neutral); background-color: #E3F2FD; }
+        .btn-colloquial:hover:not(.disabled) { border-color: var(--colloquial); color: var(--colloquial); background-color: #FFF3E0; }
+        .btn-formal:hover:not(.disabled) { border-color: var(--formal); color: var(--formal); background-color: #ECEFF1; }
+
+        /* Feedback States */
+        .style-btn.correct {
+            background-color: var(--success) !important;
+            color: white !important;
+            border-color: var(--success) !important;
+        }
+        .style-btn.correct::after { content: '✓'; }
+
+        .style-btn.wrong {
+            background-color: var(--error) !important;
+            color: white !important;
+            border-color: var(--error) !important;
+            opacity: 0.6;
+        }
+        .style-btn.wrong::after { content: '✗'; }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        /* Richtige Antwort bleibt sichtbar */
+        .disabled.correct, .disabled.reveal {
+            opacity: 1;
+        }
+        
+        /* Zum Aufdecken der Lösung (wenn User falsch lag oder Lösung klickt) */
+        .style-btn.reveal {
+            border-color: var(--success);
+            color: var(--success);
+            background-color: white;
+            font-weight: bold;
+        }
+
+        /* Karten Rand färben bei Ergebnis */
+        .card.solved-neutral { border-top-color: var(--neutral); }
+        .card.solved-colloquial { border-top-color: var(--colloquial); }
+        .card.solved-formal { border-top-color: var(--formal); }
+        .card.solved-wrong { border-top-color: var(--error); }
+
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        @media (max-width: 600px) {
+            .controls { width: 90%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Stil-Check</h1>
+        <p class="instruction">
+            In welchem Stil ist der Satz geschrieben?
+            <br>
+            <span style="color:var(--neutral)">Neutral</span> (Standard) • 
+            <span style="color:var(--colloquial)">Umgangssprachlich</span> (Slang/Grob) • 
+            <span style="color:var(--formal)">Formell</span> (Gehoben/Wissenschaftlich)
+        </p>
+    </header>
+
+    <div id="quiz-grid" class="grid">
+        <!-- Karten werden generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Kategorien: 'neutral', 'colloquial', 'formal'
+    const tasks = [
+        {
+            text: "Боксер из Мексики <span class='verb-highlight'>уделал</span> соперника.",
+            trans: "Der Boxer aus Mexiko hat den Gegner fertiggemacht.",
+            type: "colloquial"
+        },
+        {
+            text: "Студент <span class='verb-highlight'>сделал</span> домашнее задание.",
+            trans: "Der Student hat die Hausaufgabe gemacht.",
+            type: "neutral"
+        },
+        {
+            text: "Ученый <span class='verb-highlight'>проделал</span> сложный эксперимент.",
+            trans: "Der Wissenschaftler führte ein komplexes Experiment durch.",
+            type: "formal"
+        },
+        {
+            text: "Хватит <span class='verb-highlight'>выделываться</span> перед друзьями!",
+            trans: "Hör auf, vor den Freunden so anzugeben!",
+            type: "colloquial"
+        },
+        {
+            text: "Рабочие <span class='verb-highlight'>заделали</span> дыру в стене.",
+            trans: "Die Arbeiter haben das Loch in der Wand geschlossen.",
+            type: "neutral"
+        },
+        {
+            text: "Ой, ты <span class='verb-highlight'>уделал</span> новую рубашку кетчупом!",
+            trans: "Oh, du hast das neue Hemd mit Ketchup eingesaut!",
+            type: "colloquial"
+        },
+        {
+            text: "Нужно <span class='verb-highlight'>переделать</span> этот отчет.",
+            trans: "Man muss diesen Bericht neu machen.",
+            type: "neutral"
+        },
+        {
+            text: "Туристы <span class='verb-highlight'>проделали</span> долгий путь.",
+            trans: "Die Touristen haben einen langen Weg zurückgelegt/absolviert.",
+            type: "formal"
+        },
+        {
+            text: "Как мне <span class='verb-highlight'>отделаться</span> от этого парня?",
+            trans: "Wie werde ich diesen Typen los? (negativ konnotiert)",
+            type: "colloquial"
+        },
+        {
+            text: "Бабушка <span class='verb-highlight'>наделала</span> много пирожков.",
+            trans: "Oma hat eine Menge kleiner Kuchen gemacht.",
+            type: "neutral"
+        },
+        {
+            text: "Что ты <span class='verb-highlight'>наделала</span>?!",
+            trans: "Was hast du angerichtet?! (Vorwurf)",
+            type: "colloquial"
+        },
+        {
+            text: "Мастер <span class='verb-highlight'>приделал</span> ручку к двери.",
+            trans: "Der Handwerker hat den Griff an der Tür befestigt.",
+            type: "neutral"
+        }
+    ];
+
+    const grid = document.getElementById('quiz-grid');
+
+    function init() {
+        grid.innerHTML = '';
+        
+        tasks.forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${index}`;
+
+            card.innerHTML = `
+                <div>
+                    <div class="sentence">${task.text}</div>
+                    <div class="translation">${task.trans}</div>
+                </div>
+                <div class="btn-group">
+                    <div class="style-btn btn-neutral" onclick="checkAnswer(${index}, 'neutral', this)">Neutral</div>
+                    <div class="style-btn btn-colloquial" onclick="checkAnswer(${index}, 'colloquial', this)">Umgangssprachlich</div>
+                    <div class="style-btn btn-formal" onclick="checkAnswer(${index}, 'formal', this)">Formell / Gehoben</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    window.checkAnswer = function(index, selectedType, btn) {
+        const correctType = tasks[index].type;
+        const card = document.getElementById(`card-${index}`);
+        const buttons = card.querySelectorAll('.style-btn');
+
+        // Buttons sperren
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (selectedType === correctType) {
+            // Richtig
+            btn.classList.add('correct');
+            // Karte oben färben
+            card.classList.add(`solved-${correctType}`);
+        } else {
+            // Falsch
+            btn.classList.add('wrong');
+            card.classList.add('solved-wrong');
+            
+            // Richtigen anzeigen
+            buttons.forEach(b => {
+                // Wir müssen prüfen welcher Button der richtige Typ war
+                // Da wir keine ID am Button haben, prüfen wir den onclick String oder die Klasse
+                // Einfacher: Wir schauen auf die Klasse
+                if (b.classList.contains(`btn-${correctType}`)) {
+                    b.classList.add('reveal');
+                }
+            });
+        }
+    };
+
+    window.resetQuiz = function() {
+        init();
+    };
+
+    window.showSolution = function() {
+        tasks.forEach((task, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const buttons = card.querySelectorAll('.style-btn');
+            
+            // Karte färben
+            card.className = 'card'; // reset classes
+            card.classList.add(`solved-${task.type}`);
+
+            buttons.forEach(b => {
+                b.className = `style-btn disabled`; // reset styling
+                // Grundklassen wieder hinzufügen für Farben
+                if(b.textContent.includes('Neutral')) b.classList.add('btn-neutral');
+                if(b.textContent.includes('Umgangssprachlich')) b.classList.add('btn-colloquial');
+                if(b.textContent.includes('Formell')) b.classList.add('btn-formal');
+
+                // Richtigen markieren
+                if (b.classList.contains(`btn-${task.type}`)) {
+                    b.classList.add('correct');
+                }
+            });
+        });
+    };
+
+    init();
+
+</script>
+
+</body>
+</html>
