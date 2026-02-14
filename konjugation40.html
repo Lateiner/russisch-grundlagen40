@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Zeitenbildung (Konjugation)</title>
+    <!-- Polyfill für Touch-Geräte -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #E91E63; /* Pink/Magenta */
+            --primary-dark: #C2185B;
+            --bg-color: #fdf2f8; /* Very light pink */
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #F44336;
+            --border-radius: 8px;
+            --gap-bg: #eee;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Footer */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 5px; }
+        p.instruction { color: #666; max-width: 600px; margin: 0 auto; }
+
+        /* --- Sticky Wortbank --- */
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .word-bank {
+            background-color: #ffffff;
+            border: 2px dashed #f8bbd0;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            min-height: 50px;
+            max-height: 30vh;
+            overflow-y: auto;
+        }
+
+        .draggable {
+            background-color: #fff;
+            border: 1px solid #ff80ab;
+            color: #C2185B;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: grab;
+            font-weight: 600;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            user-select: none;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+
+        .draggable:active { cursor: grabbing; transform: scale(1.05); }
+        .draggable.dragging { opacity: 0.5; }
+
+        /* --- Sätze Liste --- */
+        .sentence-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sentence-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            line-height: 2.2; /* Mehr Platz für die Lücke */
+            border-left: 4px solid var(--primary);
+        }
+
+        .hint {
+            color: #888;
+            font-size: 0.85rem;
+            margin-left: 10px;
+            font-style: italic;
+            white-space: nowrap;
+        }
+
+        /* Lücken (Dropzones) */
+        .dropzone {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            height: 36px;
+            background-color: var(--gap-bg);
+            border-bottom: 2px solid #bbb;
+            border-radius: 4px 4px 0 0;
+            margin: 0 8px;
+            vertical-align: middle;
+            padding: 0 10px;
+            transition: all 0.2s;
+            color: black;
+            font-weight: bold;
+        }
+
+        .dropzone.drag-over {
+            background-color: #e3f2fd;
+            border-color: var(--primary);
+        }
+
+        /* Feedback Status */
+        .dropzone.correct {
+            background-color: #e8f5e9;
+            border-bottom-color: var(--success);
+            color: var(--success);
+        }
+
+        .dropzone.wrong {
+            background-color: #ffebee;
+            border-bottom-color: var(--error);
+            color: var(--error);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: filter 0.2s;
+        }
+        button.ctrl-btn:hover { filter: brightness(110%); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .sentence-card {
+                padding: 15px;
+                font-size: 0.95rem;
+            }
+            .hint {
+                display: block;
+                margin-left: 0;
+                margin-top: 5px;
+                width: 100%;
+            }
+            .dropzone {
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Zeitenbildung (Konjugation)</h1>
+        <p class="instruction">
+            Achte auf die Zeitform (Gestern, Heute, Morgen) und den Aspekt.
+            <br>Ziehe das richtige Verb in die Lücke.
+        </p>
+    </header>
+
+    <!-- Sticky Wortbank -->
+    <div class="sticky-wrapper">
+        <div class="word-bank" id="source-container">
+            <!-- Wörter werden hier generiert -->
+        </div>
+    </div>
+
+    <div class="sentence-list" id="quiz-container">
+        <!-- Sätze werden hier generiert -->
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    /*
+     LOGIK:
+     Past (Präteritum): Endungen -л, -ла, -ли
+     Present (Präsens): Nur Unvollendet (NSW)! Endungen -ет, -ют etc.
+     Future (Futur): 
+        - SW (Einfach): Präsens-Endungen (сделаю)
+        - NSW (Zusammengesetzt): буду делать (hier fokussieren wir auf SW Formen oder eindeutige NSW Präsens)
+    */
+
+    const exercises = [
+        {
+            pre: "Вчера студент плохо сделал задание, и он его",
+            correct: "переделал",
+            post: ".",
+            hint: "(er / korrigieren / Vergangenheit)"
+        },
+        {
+            pre: "Не волнуйся, завтра я обязательно",
+            correct: "доделаю",
+            post: "эту работу.",
+            hint: "(ich / fertigstellen / Zukunft SW)"
+        },
+        {
+            pre: "Посмотри! В стене дыра, рабочие её",
+            correct: "заделывают",
+            post: "прямо сейчас.",
+            hint: "(sie / schließen / Präsens NSW)"
+        },
+        {
+            pre: "Раньше этот магазин часто",
+            correct: "подделывал",
+            post: "сумки Гуччи.",
+            hint: "(er / fälschen / Vergangenheit NSW)"
+        },
+        {
+            pre: "Вчера туристы",
+            correct: "проделали",
+            post: "долгий путь домой.",
+            hint: "(sie / zurücklegen / Vergangenheit)"
+        },
+        {
+            pre: "Мы купили шкаф, но ручку мы",
+            correct: "приделаем",
+            post: "только завтра.",
+            hint: "(wir / anbringen / Zukunft SW)"
+        },
+        {
+            pre: "Повар на кухне сейчас",
+            correct: "разделывает",
+            post: "рыбу.",
+            hint: "(er / zerlegen / Präsens NSW)"
+        },
+        {
+            pre: "Слава богу! Я наконец-то",
+            correct: "отделался",
+            post: "от этих проблем.",
+            hint: "(ich [m] / loswerden / Vergangenheit)"
+        },
+        {
+            pre: "Почему ты всегда",
+            correct: "выделываешься",
+            post: "? Будь проще!",
+            hint: "(du / angeben / Präsens NSW)"
+        },
+        {
+            pre: "Девушка немного",
+            correct: "поделала",
+            post: "уроки и пошла гулять.",
+            hint: "(sie / bisschen machen / Vergangenheit)"
+        },
+        {
+            pre: "На матче мексиканский боксер",
+            correct: "уделал",
+            post: "канадского.",
+            hint: "(er / besiegen / Vergangenheit / Umgangsspr.)"
+        },
+        {
+            pre: "Ой! Что ты",
+            correct: "наделала",
+            post: "? Мама будет ругаться!",
+            hint: "(du [f] / anrichten / Vergangenheit)"
+        }
+    ];
+
+    const sourceContainer = document.getElementById('source-container');
+    const quizContainer = document.getElementById('quiz-container');
+
+    function init() {
+        sourceContainer.innerHTML = '';
+        quizContainer.innerHTML = '';
+        
+        const draggables = [];
+
+        exercises.forEach((ex, index) => {
+            // Wort für die Bank erstellen
+            draggables.push({
+                text: ex.correct,
+                id: `word-${index}`
+            });
+
+            // Satzkarte erstellen
+            const card = document.createElement('div');
+            card.className = 'sentence-card';
+            
+            // HTML Struktur mit Lücke
+            card.innerHTML = `
+                <span>${ex.pre}</span>
+                <div class="dropzone" data-target="${ex.correct}"></div>
+                <span>${ex.post}</span>
+                <span class="hint">${ex.hint}</span>
+            `;
+            
+            quizContainer.appendChild(card);
+        });
+
+        // Wörter mischen
+        draggables.sort(() => Math.random() - 0.5);
+
+        // Wörter in die Bank einfügen
+        draggables.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'draggable';
+            el.draggable = true;
+            el.textContent = d.text;
+            el.dataset.val = d.text;
+            el.id = d.id;
+            sourceContainer.appendChild(el);
+        });
+
+        setupDragAndDrop();
+    }
+
+    function setupDragAndDrop() {
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+        const containers = [sourceContainer, ...dropzones];
+
+        // Drag Events für Elemente
+        draggables.forEach(d => {
+            d.addEventListener('dragstart', () => d.classList.add('dragging'));
+            d.addEventListener('dragend', () => d.classList.remove('dragging'));
+        });
+
+        // Dropzone Events
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const isSource = container === sourceContainer;
+                // Erlauben wenn Source oder wenn Dropzone leer
+                if (isSource || container.childElementCount === 0) {
+                    if(!isSource) container.classList.add('drag-over');
+                }
+            });
+
+            container.addEventListener('dragleave', () => container.classList.remove('drag-over'));
+
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                container.classList.remove('drag-over');
+                
+                const draggable = document.querySelector('.dragging');
+                if (!draggable) return;
+
+                const isSource = container === sourceContainer;
+
+                // Wenn Ziel voll ist (und nicht Source), abbrechen
+                if (!isSource && container.childElementCount > 0) return;
+
+                container.appendChild(draggable);
+
+                // --- FEEDBACK LOGIK ---
+                if (!isSource) {
+                    const targetVal = container.dataset.target;
+                    const droppedVal = draggable.dataset.val;
+
+                    container.classList.remove('correct', 'wrong');
+
+                    if (targetVal === droppedVal) {
+                        // Richtig
+                        container.classList.add('correct');
+                        // Element sperren
+                        draggable.draggable = false;
+                        draggable.style.cursor = 'default';
+                        draggable.style.border = 'none';
+                        draggable.style.background = 'transparent';
+                    } else {
+                        // Falsch
+                        container.classList.add('wrong');
+                        // Feedback: Man kann es wieder rausziehen
+                    }
+                } else {
+                    // Zurück in Source: Styles zurücksetzen falls nötig
+                    draggable.style.border = '';
+                    draggable.style.background = '';
+                }
+            });
+        });
+    }
+
+    window.resetQuiz = function() {
+        init(); // Alles neu aufbauen
+    };
+
+    window.showSolution = function() {
+        // Alle Wörter finden
+        const draggables = Array.from(document.querySelectorAll('.draggable'));
+        const dropzones = document.querySelectorAll('.dropzone');
+
+        dropzones.forEach(zone => {
+            const targetWord = zone.dataset.target;
+            
+            // Wort suchen (kann in Source oder anderer Zone sein)
+            // Wir suchen nach data-val, da draggable=false sein könnte
+            const match = draggables.find(d => d.dataset.val === targetWord);
+
+            if (match) {
+                // In die Zone bewegen
+                zone.appendChild(match);
+                
+                // Als richtig markieren
+                zone.classList.remove('wrong');
+                zone.classList.add('correct');
+                
+                // Stylen
+                match.draggable = false;
+                match.style.cursor = 'default';
+                match.style.border = 'none';
+                match.style.background = 'transparent';
+            }
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
