@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch: Lückentext (Renovierung)</title>
+    <style>
+        :root {
+            --primary: #009688; /* Teal */
+            --primary-dark: #00796B;
+            --bg-color: #e0f2f1;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --success: #4CAF50;
+            --error: #E53935;
+            --border-radius: 12px;
+            --select-bg: #fafafa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Platz für Footer */
+            line-height: 1.8; /* Größerer Zeilenabstand für Lesbarkeit */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary-dark); margin-bottom: 10px; }
+        p.instruction { color: #555; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* --- Text Container --- */
+        .story-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-size: 1.15rem;
+            border-top: 6px solid var(--primary);
+        }
+
+        .story-title {
+            font-weight: bold;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* --- Inline Select Styles --- */
+        select.cloze-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--select-bg);
+            border: 2px solid #bbb;
+            border-radius: 6px;
+            padding: 4px 25px 4px 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            color: #333;
+            margin: 0 4px;
+            font-weight: 500;
+            /* Custom Arrow */
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23555%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px top 55%;
+            background-size: 10px auto;
+            min-width: 140px;
+            transition: all 0.3s;
+            vertical-align: middle;
+        }
+
+        select.cloze-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 5px rgba(0, 150, 136, 0.3);
+        }
+
+        /* Feedback States */
+        select.correct {
+            border-color: var(--success);
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            font-weight: bold;
+        }
+
+        select.wrong {
+            border-color: var(--error);
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+
+        /* --- Context Helper --- */
+        .context-hint {
+            display: block;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f8e9;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #558b2f;
+            border-left: 4px solid #8bc34a;
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        button.ctrl-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s;
+        }
+        button.ctrl-btn:active { transform: scale(0.95); }
+
+        #btn-reset { background-color: #FF9800; }
+        #btn-solve { background-color: #607D8B; }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            .story-card { padding: 20px; font-size: 1rem; }
+            select.cloze-select { 
+                min-width: 100px; 
+                padding-right: 20px;
+                max-width: 100%; /* Verhindert overflow */
+            }
+            .controls { width: 90%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Lückentext: Renovierung</h1>
+        <p class="instruction">
+            Lies den Text und wähle das passende Verb aus dem Menü.
+            <br>Achte auf den Kontext: Geht es um "beenden", "neu machen" oder "ein Loch schließen"?
+        </p>
+    </header>
+
+    <div class="story-card">
+        <div class="story-title">Наша новая квартира</div>
+        <div id="story-content">
+            <!-- Text wird hier generiert -->
+        </div>
+
+        <div class="context-hint">
+            <strong>Tipp:</strong><br>
+            <em>отделать</em> = renovieren/ausbauen (finalisieren)<br>
+            <em>заделать</em> = ein Loch schließen<br>
+            <em>переделать</em> = korrigieren/neu machen<br>
+            <em>доделать</em> = zu Ende bringen<br>
+            <em>приделать</em> = befestigen/anbringen
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btn-reset" class="ctrl-btn" onclick="resetQuiz()">Zurücksetzen</button>
+    <button id="btn-solve" class="ctrl-btn" onclick="showSolution()">Lösung anzeigen</button>
+</div>
+
+<script>
+    // Der Text ist in Segmente unterteilt. 
+    // Strings sind normaler Text, Objekte sind die Lücken.
+    const storyParts = [
+        "Недавно мы купили квартиру в новостройке. К сожалению, строители ещё не ",
+        {
+            correct: "отделали",
+            options: ["отделали", "наделали", "подделали"],
+            placeholder: "..."
+        },
+        " её (renoviert/fertiggestellt), поэтому там были только бетонные стены. Мы решили всё ",
+        {
+            correct: "сделать",
+            options: ["сделать", "уделать", "разделать"],
+            placeholder: "..."
+        },
+        " сами. <br><br>Сначала мы увидели большую дыру в стене на кухне. Нам нужно было срочно ",
+        {
+            correct: "заделать",
+            options: ["заделать", "переделать", "приделать"],
+            placeholder: "..."
+        },
+        " её (schließen). Мой муж начал работать, но у него мало опыта, и он сделал всё криво. Ему пришлось ",
+        {
+            correct: "переделать",
+            options: ["переделать", "вделать", "наделать"],
+            placeholder: "..."
+        },
+        " работу (neu machen). <br><br>Вечером мы очень устали, но хотели ",
+        {
+            correct: "доделать",
+            options: ["доделать", "поделать", "выделать"],
+            placeholder: "..."
+        },
+        " пол в спальне (zu Ende bringen). В самом конце мы забыли ",
+        {
+            correct: "приделать",
+            options: ["приделать", "подделать", "отделать"],
+            placeholder: "..."
+        },
+        " плинтус (Fußleiste anbringen), но решили оставить это на завтра."
+    ];
+
+    const storyContent = document.getElementById('story-content');
+    // Wir speichern Referenzen zu den Lücken für später
+    let gapReferences = [];
+
+    // Shuffle Funktion für Dropdown Optionen
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function init() {
+        storyContent.innerHTML = '';
+        gapReferences = [];
+
+        storyParts.forEach((part, index) => {
+            if (typeof part === 'string') {
+                // Normaler Text
+                const span = document.createElement('span');
+                span.innerHTML = part; // innerHTML erlaubt <br> tags
+                storyContent.appendChild(span);
+            } else {
+                // Lücke (Objekt)
+                const select = document.createElement('select');
+                select.className = 'cloze-select';
+                select.id = `gap-${index}`;
+                
+                // Placeholder Option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = "";
+                defaultOption.text = part.placeholder;
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                select.appendChild(defaultOption);
+
+                // Optionen mischen
+                const mixedOptions = shuffle([...part.options]);
+                
+                mixedOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.text = opt;
+                    select.appendChild(option);
+                });
+
+                // Event Listener für sofortiges Feedback
+                select.addEventListener('change', function() {
+                    checkAnswer(this, part.correct);
+                });
+
+                storyContent.appendChild(select);
+                
+                // Referenz speichern für Reset/Solve
+                gapReferences.push({
+                    element: select,
+                    correct: part.correct
+                });
+            }
+        });
+    }
+
+    function checkAnswer(selectElement, correctValue) {
+        selectElement.classList.remove('correct', 'wrong');
+        
+        if (selectElement.value === correctValue) {
+            selectElement.classList.add('correct');
+        } else {
+            selectElement.classList.add('wrong');
+        }
+    }
+
+    window.resetQuiz = function() {
+        gapReferences.forEach(ref => {
+            ref.element.value = ""; // Reset to placeholder
+            ref.element.classList.remove('correct', 'wrong');
+        });
+    };
+
+    window.showSolution = function() {
+        gapReferences.forEach(ref => {
+            ref.element.value = ref.correct;
+            ref.element.classList.remove('wrong');
+            ref.element.classList.add('correct');
+        });
+    };
+
+    // Start
+    init();
+
+</script>
+
+</body>
+</html>
